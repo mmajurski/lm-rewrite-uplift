@@ -35,3 +35,6 @@ Dataset of questions with detailed supporting context
 For each question, rewrite to include more specificity and detail, removing things which are implied or understood. Making those details explicit in the question.
 Datasets
     start with mrqa_HotpotQA, mrqa_NaturalQuestionsShort, mrqa_TriviaQA-web
+    ucinlp_drop might serve as a good test case of disambiguation. As many of the questions are not understandable in isolation.
+    https://aclanthology.org/2024.emnlp-main.956.pdf
+        https://github.com/Shaier/Adaptive_QA
