@@ -11,15 +11,16 @@ Run the following commands to create and activate a virtual environment:
 ```shell
 uv venv --python=3.12
 source .venv/bin/activate
-uv sync
 ```
+
 
 ### Step 2: Install Dependencies
 Run the following commands to install the required packages:
 
 ```shell
-uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-uv pip install jsonpickle transformers datasets matplotlib scikit-learn seqeval torchmetrics nltk accelerate evaluate peft bitsandbytes trl pynvml lm-eval levenshtein
+#uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+#uv pip install jsonpickle transformers 
+uv pip install jsonpickle datasets matplotlib scikit-learn levenshtein pandas openai
 uv pip install inspect-ai
 ```
 

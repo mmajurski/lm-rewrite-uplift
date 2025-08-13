@@ -1,43 +1,54 @@
 
-source ~/venv/lmg/bin/activate
-
-
-# python inspect_eval.py --run_reformat
-# python inspect_eval.py
-
-# python inspect_eval_open.py --run_reformat
-# python inspect_eval_open.py
+source .venv/bin/activate
 
 
 
 
 
-
-fldr=./data-subset-100
-# model=Llama-4-Maverick-17B-128E-Instruct-FP8
-# # remote=rchat
-# remote="pn131285:8443"
-
-model="gpt-4.1-mini"
-remote="openai"
+python inspect_eval_open.py --question_key='orig_question'
+python inspect_eval_open.py --question_key='question'
 
 
-datasets=(
-  # "mrqa_NaturalQuestionsShort.jsonl"
-  # "ucinlp_drop.jsonl"
+# fldr=./data-subset-1000/oe-unmodified/
+# # model=Llama-4-Maverick-17B-128E-Instruct-FP8
+# # # remote=rchat
+# # remote="pn131285:8443"
 
-  # "annurev-control-071020-104336.jsonl"
-  # "arXiv_2502_17521v1.jsonl"
-  "squadv2.jsonl"
-  "mrqa_HotpotQA.jsonl"
-  "mrqa_TriviaQA-web.jsonl"
-  "pubmed_qa.jsonl"
-  "sec_qa.jsonl"
-)
+# model="gpt-oss-120b"
+# remote="pn131285:8447"
+# out_fldr=./data-subset-1000/oe-gpt120b
 
 
+# datasets=(
+#   "flashrag_2wikimultihopqa.json"
+#   "flashrag_boolq.json"
+#   "flashrag_fermi.json"
+#   "flashrag_hotpotqa.json"
+#   "flashrag_msmarcoqa.json"
+#   "flashrag_musique.json"
+#   "mrqa_HotpotQA.json"
+#   "mrqa_NaturalQuestionsShort.json"
+#   "mrqa_TriviaQA-web.json"
+#   "pubmed_qa.json"
+#   "squadv2.json"
+#   "triva_qa.json"
+# )
 
-out_fldr=./data-subset-100/open-gpt_4_1_mini
-for dataset in "${datasets[@]}"; do
-  python generate_novel_open.py --dataset=${dataset} --src_dataset_dir=${fldr} --out_dataset_dir=${out_fldr} --remote=${remote} --model=${model}
-done
+
+
+
+# # for dataset in "${datasets[@]}"; do
+# #   python generate_reformat.py --dataset=${dataset} --src_dataset_dir=${fldr} --out_dataset_dir=${out_fldr} --remote=${remote} --model=${model}
+# # done
+
+
+
+
+# model="Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
+# remote="pn131285:8446"
+# out_fldr=./data-subset-1000/oe-Q235B
+
+
+# for dataset in "${datasets[@]}"; do
+#   python generate_reformat.py --dataset=${dataset} --src_dataset_dir=${fldr} --out_dataset_dir=${out_fldr} --remote=${remote} --model=${model}
+# done
