@@ -14,6 +14,50 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+plot_colors = [
+    '#1f77b4',  # blue
+    # '#ff7f0e',  # orange
+    '#ffa655',  # orange
+    '#2ca02c',  # green
+    '#d62728',  # red
+    '#9467bd',  # purple
+    '#8c564b',  # brown
+    '#e377c2',  # pink
+    '#7f7f7f',  # gray
+    '#bcbd22',  # olive
+    '#17becf',  # cyan
+    '#aec7e8',  # light blue
+    # '#ffbb78',  # light orange
+    '#ff7f0e',  # orange
+    '#98df8a',  # light green
+    '#ff9896',  # light red
+    '#c5b0d5',  # light purple
+    '#c49c94',  # light brown
+    '#f7b6d2',  # light pink
+    '#c7c7c7',  # light gray
+    '#dbdb8d',  # light olive
+    '#9edae5'   # light cyan
+]
+
+plot_markers = [
+    'o',
+    '*',
+    's',
+    'D',
+    'P',
+    'X',
+    'd',
+    'H',
+    'v',
+    '^',
+    '<',
+    '>',
+    '|',
+    '_',
+    '+',
+    '.',
+]
+
 
 
 
@@ -44,7 +88,7 @@ else:
         model_name = data['eval']['model'].replace("v_llm/", "")
         dataset_name = data['eval']['task_registry_name']
 
-        d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
+        d_fp = data['eval']['task_args']['dataset_fldr']#.replace('mmajursk','mmajurski')
         with open(d_fp, 'r') as f:
             source_dataset = json.load(f)
 
@@ -73,7 +117,7 @@ else:
         model_name = data['eval']['model'].replace("v_llm/", "")
         dataset_name = data['eval']['task_registry_name']
 
-        d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
+        d_fp = data['eval']['task_args']['dataset_fldr']#.replace('mmajursk','mmajurski')
         with open(d_fp, 'r') as f:
             source_dataset = json.load(f)
 
@@ -152,9 +196,7 @@ with open('avg_uplift_per_model_dataset.json', 'w') as f:
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Define markers and colors for different datasets
-markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h', 'H', '+', 'x']
-colors = plt.cm.Set3(np.linspace(0, 1, len(avg_uplift_per_model_dataset.keys())))
+
 
 # Get unique models across all datasets
 all_models = set()
@@ -163,7 +205,7 @@ for dataset_name, models in avg_uplift_per_model_dataset.items():
 
 # Create a scatterplot for each model
 for model_name in all_models:
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(8, 8))
     
     # Plot data points for each dataset
     for dataset_idx, (dataset_name, models) in enumerate(avg_uplift_per_model_dataset.items()):
@@ -172,8 +214,8 @@ for model_name in all_models:
             reformat_acc = models[model_name]['avg_reformat_acc']
             num_questions = models[model_name]['num_questions']
             
-            marker = markers[dataset_idx % len(markers)]
-            color = colors[dataset_idx]
+            marker = plot_markers[dataset_idx % len(plot_markers)]
+            color = plot_colors[dataset_idx]
             plt.scatter(ref_acc, reformat_acc, 
                        marker=marker, color=color, s=100, alpha=0.8, 
                        label=f'{dataset_name} (n={num_questions})')
@@ -201,6 +243,7 @@ for model_name in all_models:
     plt.ylim(0, 1)
     
     # Save the plot
+    os.makedirs('./imgs', exist_ok=True)
     plt.savefig(f'./imgs/scatterplot_{model_name.replace("/", "_")}.svg', dpi=300, bbox_inches='tight')
     plt.close()
 

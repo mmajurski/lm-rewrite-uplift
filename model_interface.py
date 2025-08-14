@@ -66,13 +66,14 @@ def translate_remote(remote:str) -> tuple[str, str]:
 
 
 class SglModelAsync:
-    def __init__(self, model:str, remote:str, reasoning_effort:str='medium'):
+    def __init__(self, model:str, remote:str, reasoning_effort:str='medium', connection_parallelism:int=64):
         self.model = model
         self.remote = remote
         self.url, self.api_key = translate_remote(remote)
         self.reasoning_effort = reasoning_effort
+        print(f"SglModelAsync selected reasoning_effort: {reasoning_effort}")
 
-        self.connection_parallelism = 256
+        self.connection_parallelism = connection_parallelism
         if 'openai' in self.url:
             print("OpenAI detected, setting connection parallelism to 10")
             self.connection_parallelism = 10
@@ -98,15 +99,43 @@ class SglModelAsync:
 
             instructions = "You are an assistant that doesn't make mistakes. If a reference format is presented to you, you follow it perfectly without making errors."
             
-            response = await client.responses.create(
-                model=model,
-                instructions=instructions,
-                input=prompt,
-                max_output_tokens=8192,
-                temperature=0.7,
-                stream=False,
-                reasoning={'effort': reasoning_effort},
-            )
+            if 'gpt-oss' in model:
+                retry_count_for_gpt_oss = 0
+                latest_error = None
+                while retry_count_for_gpt_oss < 10:
+                    try:
+                        response = await client.responses.create(
+                            model=model,
+                            instructions=instructions,
+                            input=prompt,
+                            max_output_tokens=32000, #8192,
+                            temperature=0.7,
+                            stream=False,
+                            reasoning={'effort': reasoning_effort},
+                        )
+                        if retry_count_for_gpt_oss > 0:
+                            print(f"GPT-OSS took {retry_count_for_gpt_oss} retries, but succeeded")
+                        break
+                    except Exception as e:
+                        latest_error = e
+                        retry_count_for_gpt_oss += 1
+                        time.sleep(0.2)
+                if retry_count_for_gpt_oss == 3:
+                    raise Exception(f"Failed to generate response for GPT-OSS: {latest_error}")
+                
+                
+            else:
+                response = await client.responses.create(
+                        model=model,
+                        instructions=instructions,
+                        input=prompt,
+                        max_output_tokens=32000,
+                        temperature=0.7,
+                        stream=False,
+                        reasoning={'effort': reasoning_effort},
+                    )
+                    
+            
             
             elapsed = time.time() - start_time
             input_tokens = getattr(response.usage, 'input_tokens', 0)
@@ -202,6 +231,13 @@ class SglModelAsync:
 
             # Execute this batch concurrently and gather results
             batch_results = await asyncio.gather(*batch_tasks)
+            failed_flag = False
+            for res in batch_results:
+                if res['error'] is not None:
+                    failed_flag = True
+                    break
+            if failed_flag:
+                raise Exception("Failed to generate response for some prompts")
             results.extend(batch_results)
         
         total_time = time.time() - total_start_time

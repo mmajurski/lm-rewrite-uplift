@@ -3,8 +3,8 @@ import json
 import random
 
 ifp = './source_data'
-N = 1000
-ofp = f'./data-subset-1000'
+N = 500
+ofp = f'./data-subset-{N}/source_data'
 os.makedirs(ofp, exist_ok=True)
 
 fns = [fn for fn in os.listdir(ifp) if fn.endswith('.json')]
@@ -26,7 +26,10 @@ for fn in fns:
     for entry in data:
         text = entry['context']
         word_count = len(text.split())
-        if word_count <= 10000:
+        answer_length = len(str(entry['answer']))
+        if "No Answer Present" in str(entry['answer']) or "yes" == str(entry['answer']).lower() or "no" == str(entry['answer']).lower():
+            continue
+        if word_count <= 5000 and word_count > 10 and answer_length >= 3:
             filtered_data.append(entry)
     data = filtered_data
 

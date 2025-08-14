@@ -11,30 +11,29 @@ from model_interface import SglModelAsync
 import prompts
 
 
+def get_key_prefix(reformat: bool):
+    if reformat:
+        return 'orig_'
+    else:
+        return 'reformat_'
 
 
-def compute_meta_scores(dataset_fp, remote, model, force=False):
+
+def compute_meta_scores(dataset_fp, remote, model, reformat=False):
     with open(dataset_fp, 'r') as f:
         dataset = json.load(f)
-
-    any_missing = False
-    for d in dataset:
-        if 'question_clarity_score' not in d or d['question_clarity_score'] is None:
-            any_missing = True
-        if 'question_difficulty_score' not in d or d['question_difficulty_score'] is None:
-            any_missing = True
-        if 'question_groundedness_score' not in d or d['question_groundedness_score'] is None:
-            any_missing = True
-    if not any_missing and not force:
-        return
+    
     
     print(f"Computing meta properties for {dataset_fp}")
     print("Dataset has %d contexts" % len(dataset))
 
     # build the prompts
-    model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['question'], answer=d['answer']) for d in dataset]
+    if reformat:
+        model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['question'], answer=d['orig_answer']) for d in dataset]
+    else:
+        model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['orig_question'], answer=d['orig_answer']) for d in dataset]
 
-    model = SglModelAsync(remote=remote, model=model)
+    model = SglModelAsync(remote=remote, model=model, connection_parallelism=16)
     results, total_time = model.generate(model_prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
@@ -56,21 +55,20 @@ def compute_meta_scores(dataset_fp, remote, model, force=False):
                 raise Exception(f"Failed to parse response: {res['content']}")
                 dataset[i]['question_clarity_score'] = None  
                 dataset[i]['question_difficulty_score'] = None
-                dataset[i]['question_relevance_score'] = None
                 dataset[i]['question_groundedness_score'] = None
             else:
-                dataset[i]['question_clarity_score'] = parsed['clarity_score']
-                dataset[i]['question_difficulty_score'] = parsed['difficulty_score']
-                dataset[i]['question_groundedness_score'] = parsed['groundedness_score']
+                dataset[i][f'{get_key_prefix(reformat)}question_clarity_score'] = parsed['clarity_score']
+                dataset[i][f'{get_key_prefix(reformat)}question_difficulty_score'] = parsed['difficulty_score']
+                dataset[i][f'{get_key_prefix(reformat)}question_groundedness_score'] = parsed['groundedness_score']
 
 
-    scores = [d['question_clarity_score'] for d in dataset]
+    scores = [d[f'{get_key_prefix(reformat)}question_clarity_score'] for d in dataset]
     print(f"Average question clarity score: {np.mean(scores)}")
 
-    scores = [d['question_difficulty_score'] for d in dataset]
+    scores = [d[f'{get_key_prefix(reformat)}question_difficulty_score'] for d in dataset]
     print(f"Average question difficulty score: {np.mean(scores)}")
 
-    scores = [d['question_groundedness_score'] for d in dataset]
+    scores = [d[f'{get_key_prefix(reformat)}question_groundedness_score'] for d in dataset]
     print(f"Average question groundedness score: {np.mean(scores)}")
 
     print(f"Saving {len(dataset)} questions to {dataset_fp}")
@@ -79,11 +77,11 @@ def compute_meta_scores(dataset_fp, remote, model, force=False):
 
 
 
-def evaluate_dataset_relevance_features(ifp, remote='opchat', model='Llama-4-Maverick-17B-128E-Instruct-FP8'):
+def evaluate_dataset_relevance_features(ifp, reformat:bool, remote: str, model: str):
 
     fns = []
     for fn in os.listdir(ifp):
-        if fn.endswith('.json') and ('novel' in fn or 'reformat' in fn):
+        if fn.endswith('.json'):
             fns.append(fn)
     fns.sort()
     if len(fns) == 0:
@@ -94,14 +92,13 @@ def evaluate_dataset_relevance_features(ifp, remote='opchat', model='Llama-4-Mav
 
 
 
-    force_flag = False
     print(f"evaluate_dataset_relevance_features: Computing squishy statistics for {len(fns)} datasets")
 
     for i, fn in enumerate(fns):
         dataset_fp = f"{ifp}/{fn}"
         print(f"Dataset: {dataset_fp}")
         print(f"Progress: {i+1}/{len(fns)}")
-        compute_meta_scores(dataset_fp, remote, model, force=force_flag)
+        compute_meta_scores(dataset_fp, remote, model, reformat=reformat)
     
 
 
@@ -117,11 +114,11 @@ def evaluate_dataset_relevance_features(ifp, remote='opchat', model='Llama-4-Mav
         invalid_idx = list()
         for i in range(len(data)):
             d = data[i]
-            if d.get('question_groundedness_score') is None or not (1 <= d['question_groundedness_score'] <= 10):
+            if d.get(f'{get_key_prefix(reformat)}question_groundedness_score') is None or not (1 <= d[f'{get_key_prefix(reformat)}question_groundedness_score'] <= 10):
                 invalid_idx.append(i)
-            if d.get('question_difficulty_score') is None or not (1 <= d['question_difficulty_score'] <= 10):
+            if d.get(f'{get_key_prefix(reformat)}question_difficulty_score') is None or not (1 <= d[f'{get_key_prefix(reformat)}question_difficulty_score'] <= 10):
                 invalid_idx.append(i)
-            if d.get('question_clarity_score') is None or not (1 <= d['question_clarity_score'] <= 10):
+            if d.get(f'{get_key_prefix(reformat)}question_clarity_score') is None or not (1 <= d[f'{get_key_prefix(reformat)}question_clarity_score'] <= 10):
                 invalid_idx.append(i)
         
         # Print invalid data entries
@@ -130,17 +127,17 @@ def evaluate_dataset_relevance_features(ifp, remote='opchat', model='Llama-4-Mav
             for idx in invalid_idx:
                 print(f"  Entry {idx}:")
                 print(f"    Question: {data[idx]['question']}")
-                print(f"    Question Groundedness: {data[idx].get('question_groundedness_score', 'missing')}")
-                print(f"    Question Difficulty: {data[idx].get('question_difficulty_score', 'missing')}")
-                print(f"    Question Clarity: {data[idx].get('question_clarity_score', 'missing')}")
+                print(f"    Question Groundedness: {data[idx].get(f'{get_key_prefix(reformat)}question_groundedness_score', 'missing')}")
+                print(f"    Question Difficulty: {data[idx].get(f'{get_key_prefix(reformat)}question_difficulty_score', 'missing')}")
+                print(f"    Question Clarity: {data[idx].get(f'{get_key_prefix(reformat)}question_clarity_score', 'missing')}")
                 print()
 
             raise Exception(f"Found {len(invalid_idx)} invalid entries in dataset {fn}")
         
         
-        avg_difficulty_score[fn] = np.mean([d['question_difficulty_score'] for d in data])
-        avg_clarity_score[fn] = np.mean([d['question_clarity_score'] for d in data])
-        avg_groundedness_score[fn] = np.mean([d['question_groundedness_score'] for d in data])
+        avg_difficulty_score[fn] = np.mean([d[f'{get_key_prefix(reformat)}question_difficulty_score'] for d in data])
+        avg_clarity_score[fn] = np.mean([d[f'{get_key_prefix(reformat)}question_clarity_score'] for d in data])
+        avg_groundedness_score[fn] = np.mean([d[f'{get_key_prefix(reformat)}question_groundedness_score'] for d in data])
 
         print(f"Dataset: {os.path.basename(fn)}")
         print(f"  Average question groundedness score: {avg_groundedness_score[fn]:.4f}")
@@ -151,5 +148,15 @@ def evaluate_dataset_relevance_features(ifp, remote='opchat', model='Llama-4-Mav
 
 
 if __name__ == '__main__':
-    ifp = './data-subset-1k-p3-v1'
-    evaluate_dataset_relevance_features(ifp)
+    # ifp = './data-subset-1000/oe-Q235B-with-meta-properties/'
+    # remote = 'pn131285:8446'
+    # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
+    # evaluate_dataset_relevance_features(ifp, True, remote, model)
+    # evaluate_dataset_relevance_features(ifp, False, remote, model)
+
+
+    ifp = './data-subset-1000/oe-gpt120b-with-meta-properties/'
+    remote = 'pn131285:8447'
+    model = 'gpt-oss-120b'
+    evaluate_dataset_relevance_features(ifp, True, remote, model)
+    evaluate_dataset_relevance_features(ifp, False, remote, model)

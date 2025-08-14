@@ -168,7 +168,7 @@ def parse_meta_properties_numbers(response: str, valid_options: list = None) -> 
 
 
     
-    answer_match = re.search(r'(?:Clarity|clarity)\s*:\s*(\d+)', cleaned_response)
+    answer_match = re.search(r'(?:clarity)\s*:\s*(\d+)', cleaned_response, re.IGNORECASE)
     if answer_match:
         try:
             num = int(answer_match.group(1))
@@ -178,7 +178,7 @@ def parse_meta_properties_numbers(response: str, valid_options: list = None) -> 
         except ValueError:
             pass
 
-    answer_match = re.search(r'(?:Difficulty|difficulty)\s*:\s*(\d+)', cleaned_response)
+    answer_match = re.search(r'(?:difficulty)\s*:\s*(\d+)', cleaned_response, re.IGNORECASE)
     if answer_match:
         try:
             num = int(answer_match.group(1))
@@ -188,7 +188,7 @@ def parse_meta_properties_numbers(response: str, valid_options: list = None) -> 
         except ValueError:
             pass
 
-    answer_match = re.search(r'(?:Groundedness|groundedness)\s*:\s*(\d+)', cleaned_response)
+    answer_match = re.search(r'(?:groundedness)\s*:\s*(\d+)', cleaned_response, re.IGNORECASE)
     if answer_match:    
         try:
             num = int(answer_match.group(1))
@@ -206,29 +206,10 @@ def parse_meta_properties_numbers(response: str, valid_options: list = None) -> 
 
 
 
-def parse_generated_mcq(response: str) -> dict:
-    """
-    Parses an LLM response to extract a question, correct answer, and answer options.
-    
-    Args:
-        response (str): The full response text from the LLM
-        
-    Returns:
-        dict: A dictionary containing:
-            - 'question': The extracted question string
-            - 'correct_answer': The correct answer string
-            - 'options': A dictionary of answer options (e.g., {'A': 'option text', 'B': 'option text'})
-            - 'response': The original response
-            
-    Raises:
-        ValueError: If required components cannot be extracted
-    """
+def parse_answer_giveaway_numbers(response: str, valid_options: list = None) -> dict:
+   
     result = {
-        'question': None,
-        'correct_answer': None,
-        'options': {},
-        'response': response,
-        'explanation': None
+        'answer_giveaway_score': None,
     }
     
     # Preprocess the response to remove markdown formatting
@@ -238,8 +219,7 @@ def parse_generated_mcq(response: str) -> dict:
     cleaned_response = re.sub(r'(?:^|\n)\s*-\s*', r'\n', cleaned_response)
     # Remove leading whitespace from all lines
     cleaned_response = re.sub(r'(?:^|\n)\s+', r'\n', cleaned_response)
-    # Remove markdown headings (# ## and ###)
-    cleaned_response = re.sub(r'(?:^|\n)\s*#{1,3}\s+', r'\n', cleaned_response)
+    cleaned_response = cleaned_response.replace('[', '').replace(']', '')
 
     # Extract content between <output_format> and </output_format> tags if present
     output_format_pattern = r'<output_format>(.*?)</output_format>'
@@ -247,127 +227,22 @@ def parse_generated_mcq(response: str) -> dict:
     
     if output_format_matches:
         # If output format tags are found, use only the content from the last match
-        cleaned_response = output_format_matches[-1].group(1).strip()
-    
-    
-    # Try to extract the question - now supporting both formats
-    question_patterns = [
-        # Format: Question: text (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+)(?=\s*(?:[A-D]:|Options|Choices|Answers|A\s*[:.)]|A\.|A\)|\(A\)|A:))",
-        # Fallback pattern (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+)",
-        # Format with newline-separated options (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+)(?=\s*A:)",
-    ]
-    
-    for pattern in question_patterns:
-        # Find all matches and take the last one
-        question_matches = list(re.finditer(pattern, cleaned_response))
-        if question_matches:
-            result['question'] = question_matches[-1].group(1).strip()
-            break
+        match_str = output_format_matches[-1].group(1).strip()
+        if len(match_str) > 0:
+            cleaned_response = match_str
 
-    # Try to extract the question - now supporting both formats
-    explanation_patterns = [
-        # Format: Explanation: text (single line only)
-        r"(?:^|\n)\s*Explanation\s*:\s*([^\n]+)(?=\s*(?:Correct\s+Answer|$))",
-        # Format: Explanation - text
-        r"(?:^|\n)\s*Explanation\s*-\s*([^\n]+)",
-        # Format: Explanation (with optional colon)
-        r"(?:^|\n)\s*Explanation\s*:?\s*([^\n]+)"
-    ]
-    
-    for pattern in explanation_patterns:
-        # Find all matches and take the last one
-        explanation_matches = list(re.finditer(pattern, cleaned_response))
-        if explanation_matches:
-            result['explanation'] = explanation_matches[-1].group(1).strip()
-            break
-    
-    # Extract options
-    option_patterns = [
-        # Format: A: Option text
-        r"(?:^|\n)\s*(?!Correct\s+Answer)([A-D])\s*[:.)]?\s*([^\n]+)",
-        # Format: (A) Option text
-        r"(?:^|\n)\s*(?!Correct\s+Answer)\(([A-D])\)\s*([^\n]+)",
-        # New format with newline-separated options
-        r"(?:^|\n)(?!Correct\s+Answer)([A-D]):\s*([^\n]+)(?=\n|$)",
-    ]
-    
-    for pattern in option_patterns:
-        options = re.findall(pattern, cleaned_response) #, re.MULTILINE)
-        if options:
-            for option_letter, option_text in options:
-                result['options'][option_letter.upper()] = option_text.strip()
-            break
-    
-    # Try to extract the correct answer
-    answer_patterns = [
-        # Format: Correct Answer: X) with text after
-        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*([A-D])\s*[\)\.](.*)$",
-        # Format: Correct Answer: X with text after
-        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*([A-D])(?:\s|$|[^A-D])(.*)$",
-        # Format: Correct Answer: (X) with text after
-        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*\(([A-D])\)(.*)$",
-        # Format: Correct Answer is/= X with text after
-        r"(?:^|\n)\s*Correct\s+Answer\s*(?:is|=)\s*([A-D])(.*)$",
-    ]
-    
-    for pattern in answer_patterns:
-        answer_match = re.search(pattern, cleaned_response)
-        if answer_match:
-            result['correct_answer'] = answer_match.group(1).upper()
-            # Store the text after the answer if it exists
-            if len(answer_match.groups()) > 1 and answer_match.group(2):
-                result['answer_explanation'] = answer_match.group(2).strip()
-            break
-    
-    # If we couldn't find the answer in the cleaned response, try the original response
-    # This is a fallback in case the cleaning process affected the answer patterns
-    if not result['correct_answer']:
-        for pattern in answer_patterns:
-            answer_match = re.search(pattern, response) #, re.MULTILINE)
-            if answer_match:
-                result['correct_answer'] = answer_match.group(1).upper()
-                # Store the text after the answer if it exists
-                if len(answer_match.groups()) > 1 and answer_match.group(2):
-                    result['answer_explanation'] = answer_match.group(2).strip()
-                break
-    
-    # Final validation
-    if not result['question'] or not result['options'] or not result['correct_answer'] or not result['explanation']:
-        return None
 
-    # Additional validation for correct_answer
-    if result['correct_answer'].strip() == "" or result['explanation'].strip() == "" or result['question'].strip() == "":
-        return None
+    
+    answer_match = re.search(r'answer giveaway\s*:\s*(\d+)', cleaned_response, re.IGNORECASE)
+    if answer_match:
+        try:
+            num = int(answer_match.group(1))
+            # If valid_options is provided, check if this number is valid
+            if valid_options is None or num in valid_options:
+                result['answer_giveaway_score'] = num
+        except ValueError:
+            pass
 
-    # Validate that options only contain keys A, B, C, D
-    valid_keys = {"A", "B", "C", "D"}
-    invalid_keys = set(result['options'].keys()) - valid_keys
-    missing_keys = valid_keys - set(result['options'].keys())
-    
-    if invalid_keys:
-        # Remove any invalid keys
-        for key in invalid_keys:
-            del result['options'][key]
-    if missing_keys:
-        return None
-        
-    # Check if correct_answer is a valid option
-    if result['correct_answer'] not in valid_keys or result['correct_answer'] not in result['options']:
-        return None
-    
-    # Confirm that for every valid key, options has a non-empty string
-    for key in result['options'].keys():
-        if not result['options'][key] or result['options'][key].strip() == "":
-            return None
-        
-    # Confirm that each option is non-None
-    for key, value in result['options'].items():
-        if value is None:
-            return None
-    
     return result
 
 
@@ -414,50 +289,38 @@ def parse_generated_open(response: str) -> dict:
         cleaned_response = output_format_matches[-1].group(1).strip()
     
     
-    # Try to extract the question - now supporting both formats
+    # Try to extract the question - now supporting multi-line responses
     question_patterns = [
-        # Format: Question: text (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+?)(?=\s*(?:\n|Explanation|Correct\s+Answer))",
-        # Fallback pattern (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+)",
-        # Format with newline-separated options (single line only)
-        r"(?:^|\n)\s*Question\s*:?\s*([^\n]+)(?=\s*A:)",
+        # Format: Question: multi-line text up to Explanation section
+        r"(?:^|\n)\s*Question\s*:?\s*(.+?)(?=\s*(?:\n\s*Explanation|Explanation))",
     ]
     
     for pattern in question_patterns:
         # Find all matches and take the last one
-        question_matches = list(re.finditer(pattern, cleaned_response))
+        question_matches = list(re.finditer(pattern, cleaned_response, re.DOTALL))
         if question_matches:
             result['question'] = question_matches[-1].group(1).strip()
             break
 
-    # Try to extract the question - now supporting both formats
+    # Try to extract the explanation - now supporting multi-line responses
     explanation_patterns = [
-        # Format: Explanation: text (single line only)
-        r"(?:^|\n)\s*Explanation\s*:\s*([^\n]+)(?=\s*(?:Correct\s+Answer|$))",
-        # Format: Explanation - text
-        r"(?:^|\n)\s*Explanation\s*-\s*([^\n]+)",
-        # Format: Explanation (with optional colon)
-        r"(?:^|\n)\s*Explanation\s*:?\s*([^\n]+)"
+        # Format: Explanation: multi-line text up to Correct Answer section
+        r"(?:^|\n)\s*Explanation\s*:?\s*(.+?)(?=\s*(?:\n\s*Correct\s+Answer|Correct\s+Answer|$))",
     ]
     
     for pattern in explanation_patterns:
         # Find all matches and take the last one
-        explanation_matches = list(re.finditer(pattern, cleaned_response))
+        explanation_matches = list(re.finditer(pattern, cleaned_response, re.DOTALL))
         if explanation_matches:
             result['explanation'] = explanation_matches[-1].group(1).strip()
             break
     
-    # Try to extract the correct answer
+    # Try to extract the correct answer - now supporting multi-line responses
     answer_patterns = [
-        # Format: Correct Answer: text (with or without colon)
-        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*(.+?)(?:\n|$)",
-        # Format: Answer: text (with or without colon)
-        r"(?:^|\n)\s*Answer\s*:?\s*(.+?)(?:\n|$)",
-        # Format: The answer is text
-        r"(?:^|\n)\s*The\s+answer\s+is\s*:?\s*(.+?)(?:\n|$)",
-        # Format: Solution: text
-        r"(?:^|\n)\s*Solution\s*:?\s*(.+?)(?:\n|$)",
+        # Format: Correct Answer: multi-line text
+        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*(.+?)(?:\n\s*$|$)",
+        # Format: Answer: multi-line text
+        r"(?:^|\n)\s*Answer\s*:?\s*(.+?)(?:\n\s*$|$)"
     ]
     
     for pattern in answer_patterns:

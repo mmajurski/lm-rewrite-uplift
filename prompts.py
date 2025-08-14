@@ -218,14 +218,73 @@ Begin by thoughtfully analyzing the provided context within `<document_analysis>
 """
 
 
+ANSWER_GIVEAWAY_PROMPT = """
+## Your Role
 
+You are an expert evaluator of educational content. Your goal is to produce meaningful, insightful knowledge about domain expert evaluations designed to determine competence and knowledge. 
+
+## Input Structure
+
+Your input consists of:
+
+<question>
+[A reformatted version of the original question to be answered.]
+</question>
+
+<answer>
+[The correct answer to the question.]
+</answer>
+
+<context>
+[The text segment containing information relevant to the question.]
+</context>
+
+## Primary Objective
+
+Your goal is to judge and evaluate the quality of various test and evaluation questions. The `<question>` and `<answer>` pair is grounded and drawn from the `<context>`.
+
+### Metrics
+
+1. **Answer Give Away:** Rate from 1 to 10 how much the provided `<answer>` is given away by information in the `<question>`. A rating of 1 indicates that the information requried to answer the question is not present in the question itself. A rating of 10 indicates that the information required to answer the question is present in the question.
+
+## Analysis Phase
+
+Conduct careful analysis within `<document_analysis>` tags, following these steps:
+
+1. **Thoughtful Content Examination**
+   - Carefully analyze the given context, identifying central ideas, nuanced themes, and significant relationships within it.
+
+2. **Concept Exploration**
+   - Consider implicit assumptions, subtle details, underlying theories, and potential applications of the provided information.
+
+## Output Structure
+
+Present your final output strictly adhering the `<output_format>` tags.
+<output_format>
+Answer Giveaway: [ Answer Giveaway Rating (one of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] ) ]
+</output_format>
+
+## Output
+
+Begin by thoughtfully analyzing the provided context within `<document_analysis>` tags. Then present the resulting formatted question answer pair clearly within `<output_format>` tags.
+
+## Important Notes
+
+- Each "thought_process" should reflect careful consideration and reasoning behind your ratings.
+- Ensure rigorous adherence to output formatting.
+
+
+<question>{question}</question>
+<answer>{answer}</answer>
+<context>{context}</context>
+"""
 
 
 
 QUESTION_REFORMAT_PROMPT = """
 ## Your Role
 
-You are an expert educational content creator specializing in editing and improving evaluations to determine competency of topic domain experts based on the provided textual information. Your goal is to disambiguate any elements of the question which might not be easily understandable. 
+You are an expert educational content creator specializing in editing and improving evaluation questions to determine the competency of domain experts based on the provided textual information. 
 
 ## Input Structure
 
@@ -245,7 +304,7 @@ Your input consists of:
 
 ## Primary Objective
 
-Your goal is to reformat, rephrase, and rewrite the question according to the provided instructions. The rewritten question should be semantically equivalent to the original question, rewritten for clarity while preserving the same correct answer. This should only be done by filling in background information and explicitly stating assumptions. DO NOT include the answer information in the question.
+Your goal is to reformat, rephrase, and rewrite the question according to the provided instructions. The rewritten question should be semantically equivalent to the original question, rewritten for clarity while preserving the same correct answer. This should only be accomplished by filling in background information and explicitly stating assumptions. You are creating a test/quiz question, so DO NOT include the answer information in the question, as that would be a giveaway which skews the results. NEVER include the answer or information which would give away the answer in the rewritten question.
 
 ## Analysis Phase
 
@@ -265,11 +324,13 @@ Conduct careful analysis within `<document_analysis>` tags, following these step
 
 5. **Giving Away the Answer**
    - Plan how to avoid giving away the answer in the rewritten question. 
+   - NEVER include the answer or information which would give away the answer in the rewritten question.
 
 ### Documentation in Analysis:
 
 - Clearly document the rationale in the `<document_analysis>` tags, explaining your reasons for exclusion or inclusion decisions.
 - Clearly document what elements of the question need to be disambiguated. What steps need to be taken and what information needs to be include most clearly and concisely disambiguate the question. 
+- Clearly document what information needs to be avoided in the rewritten question to prevent giving away the answer. For example if the question asks about what year a person was born, the question should not include birthday in the biographical details.
 
 
 ## Question Rewriting Guidelines
@@ -279,6 +340,7 @@ Conduct careful analysis within `<document_analysis>` tags, following these step
 - **Thoughtful Engagement**: Prioritize creating questions that inspire deeper thought and nuanced consideration.
 - **Deep Understanding and Insight**: Ensure that the question and answers require a deep understanding of the content by a professional domain expert.
 - **Self-contained Clarity**: Questions and answers should contain sufficient context, clearly understandable independently of external references.
+- **Brevity**: The rewritten question should be as short as is reasonable while still being clear, understandable, self-contained, and unambiguous.
 
 ### Permitted Question Types:
 

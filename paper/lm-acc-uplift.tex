@@ -1,0 +1,353 @@
+\documentclass{article}
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+\usepackage[square,numbers]{natbib}
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+% \usepackage[dandb]{neurips_2025}
+\usepackage[]{neurips_2025}
+
+%\usepackage[main]{neurips_2025}
+% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2025}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2025}
+% 3. "dandb" option is used for the Datasets & Benchmarks Track
+% \usepackage[dandb]{neurips_2025}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2025}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+% \usepackage[sglblindworkshop]{neurips_2025}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2025}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+% \usepackage[main, final]{neurips_2025}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2025}
+% 3. Datasets & Benchmarks Track
+% \usepackage[dandb, final]{neurips_2025}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2025}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2025}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2025}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+% \usepackage[preprint]{neurips_2025}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2025}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{amsmath}       
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+
+\usepackage[inline]{enumitem}
+\usepackage{makecell}
+\usepackage{fancyhdr}       % header
+\usepackage{graphicx}       % graphics
+\usepackage{subcaption}
+\usepackage{mdframed}
+\usepackage{comment}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage{array} % for centering column content  
+\usepackage{wrapfig}
+\usepackage{cleveref}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{atbeginend}
+%\usepackage{pifont}
+
+\newenvironment{packed_enum}{
+\begin{enumerate}
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{enumerate}}
+
+\newenvironment{packed_item}{
+\begin{itemize}
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+\newenvironment{packed_description}{
+\begin{description}
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{description}}
+
+\AfterBegin{packed_enum}{\vspace{-0.7em}}
+\AfterEnd{packed_enum}{\vspace{-0.7em}}
+\AfterBegin{packed_item}{\vspace{-0.7em}}
+\AfterEnd{packed_item}{\vspace{-0.7em}}
+\AfterBegin{packed_description}{\vspace{-0.7em}}
+\AfterEnd{packed_description}{\vspace{-0.7em}}
+
+\AfterBegin{quote}{\vspace{-0.7em}}
+\AfterEnd{quote}{\vspace{-0.7em}}
+
+\lstdefinelanguage{json}{
+basicstyle=\ttfamily,
+numbers=left,
+numberstyle=\tiny\color{gray},
+stepnumber=1,
+numbersep=8pt,
+showstringspaces=false,
+breaklines=true,
+%	frame=lines,
+%	backgroundcolor=\color{lightgray},
+literate=
+*{0}{{{\color{blue}0}}}{1}
+{1}{{{\color{blue}1}}}{1}
+{2}{{{\color{blue}2}}}{1}
+{3}{{{\color{blue}3}}}{1}
+{4}{{{\color{blue}4}}}{1}
+{5}{{{\color{blue}5}}}{1}
+{6}{{{\color{blue}6}}}{1}
+{7}{{{\color{blue}7}}}{1}
+{8}{{{\color{blue}8}}}{1}
+{9}{{{\color{blue}9}}}{1}
+{:}{{{\color{red}:}}}{1}
+{,}{{{\color{red},}}}{1}
+{\{}{{{\color{orange}\{}}}{1}
+{\}}{{{\color{orange}\}}}}{1}
+{[}{{{\color{orange}[}}}{1}
+{]}{{{\color{orange}]}}}{1},
+}
+
+\lstdefinelanguage{txt}{
+basicstyle=\ttfamily,
+numbers=left,
+numberstyle=\tiny\color{gray},
+stepnumber=1,
+numbersep=8pt,
+showstringspaces=false,
+breaklines=true,
+%	frame=lines,
+%	backgroundcolor=\color{lightgray},
+}
+
+
+
+%
+% These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+%\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+aboveskip=0pt,belowskip=0pt,%
+showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2024.1)
+}
+
+\setcounter{secnumdepth}{3} %May be changed to 1 or 2 if section numbers are desired.
+
+%Header
+\pagestyle{fancy}
+\thispagestyle{empty}
+\rhead{ \textit{ }} 
+
+% Title
+
+\title{Evaluating LM Accuracy Uplift Through Question Rewriting to Remove Ambiguities}
+
+
+\author{%
+	Michael Majurski$^{1*}$ \quad Cynthia Matuszek$^{1}$\\
+	$^1$University of Maryland Baltimore County\\
+\texttt{majursk1@umbc.ed}\\
+\texttt{cmat@umbc.edu}\\
+%	Michael Majurski \quad Cynthia Matuszek\\
+%University of Maryland Baltimore County\\
+%	\texttt{majursk1@umbc.edu}\\
+%\texttt{cmat@umbc.edu}\\
+}
+
+
+
+
+
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+Language Models (LMs) continue to advance, improving response quality and coherence. 
+Given Internet-scale training datasets, LMs have likely encountered much of what users may ask them to generate in some form during their training. 
+A plethora of evaluation benchmarks have been constructed to assess model quality, response appropriateness, and reasoning capabilities. 
+However, the human effort required for benchmark construction is rapidly being outpaced by the size and scope of the models under evaluation.
+Having humans build a benchmark for every possible domain of interest is impractical.
+Therefore, we propose a methodology for automating the construction of fact-based synthetic data model evaluations grounded in document populations.
+This work leverages the same LMs to evaluate domain-specific knowledge automatically, using only grounding documents (e.g., a textbook) as input.
+This synthetic data benchmarking approach corresponds well with human curated questions producing an ensemble Spearman ranking correlation of $0.91$ and a benchmark evaluation Pearson accuracy correlation of $0.74$ (model specific $0.82$).
+This novel approach supports generating both multiple choice and open-ended synthetic data questions to gain diagnostic insight of LM capability.
+We apply this methodology to evaluate model performance on three recent documents (two post LM knowledge cutoff), discovering a surprisingly strong performance from Gemma-3 models on open-ended questions.
+% TODO fill in before final camera ready
+%	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
+\end{abstract}
+
+% Keywords
+% LM Evaluation, synthetic data, automated evaluation
+
+\section{Introduction}
+
+
+\begin{wrapfigure}{r}{0.44\columnwidth}
+	\vspace*{-1.0em}
+	\centering
+	\includegraphics[width=0.4\columnwidth]{figs/fig1.jpg}
+	%	\caption{Synthetic data grounded capability evaluation framework. Humans curate a document corpus, LMs generate grounded questions, which evaluate capability.}
+	\caption{Synthetic evaluation pipeline: (1) users curate grounding documents, (2) LMs generate domain-specific questions, (3) model responses are evaluated. }
+	\label{fig:evaluation-framework}
+	%	\vspace{-1em}     
+\end{wrapfigure}
+
+
+
+
+\section{Related works}
+
+
+\section{Methods}
+
+
+
+\section{Evaluation methodology}
+
+
+\subsection{Datasets}
+Evaluating the validity of generated synthetic questions requires source documents which have human annotated question/answer pairs to compare against. 
+The following NLP datasets were evaluated:
+\begin{enumerate*}[label=(\alph*)]
+	\item Squadv2~\cite{DBLP:journals/corr/abs-1806-03822}
+	\item HotpotQA~\cite{yang2018hotpotqa}
+	\item TrivaQA-web~\cite{2017arXivtriviaqa}
+	\item NaturalQuestionsShort~\cite{kwiatkowski2019natural}
+	\item PubMedQA~\cite{jin2019pubmedqa}
+	\item BoolQ~\cite{clark2019boolq}
+	\item FermiQA~\cite{kalyan2021much}
+	\item MS-MARCO-QA~\cite{bajaj2016ms}
+	\item MusiqueQA~\cite{trivedi2022musique}, and
+	\item 2WikiMultiHopQA~\cite{ho2020constructing}.
+\end{enumerate*}
+
+% TODO Verify all this AI gen information
+\begin{table}[h!]
+	\centering
+	\caption{Comprehensive Knowledge Cutoff Data Table}
+	\label{tab:model_cutoff}
+	\scriptsize
+
+		\begin{tabular}{p{5cm} p{3cm} p{3cm} p{3cm}}
+			\hline
+			\textbf{Model (Hugging Face Repository)} & \textbf{Stated Knowledge Cutoff Date} & \textbf{Public Release Date}  \\
+			\hline
+			\texttt{openai/gpt-oss-20b} & June 2024 & August 5, 2025  \\
+			\hline
+			\texttt{openai/gpt-oss-120b} & June 2024 & August 5, 2025 \\
+			\hline
+			\texttt{google/gemma-3-4b-it} & August 2024 & March 12, 2025 \\
+			\hline
+			\texttt{google/gemma-3-12b-it} & August 2024 & March 12, 2025 \\
+			\hline
+			\texttt{google/gemma-3-27b-it} & August 2024 & March 12, 2025  \\
+			\hline
+			\texttt{meta-llama/Llama-3.2-3B-Instruct} & December 2023 & September 25, 2024 \\
+			\hline
+			\texttt{meta-llama/Llama-3.1-8B-Instruct} & December 2023 & July 23, 2024 \\
+			\hline
+			\texttt{meta-llama/Llama-3.3-70B-Instruct} & December 2023 & December 6, 2024 \\
+			\hline
+			\texttt{microsoft/phi-4} & June 2024 & December 12, 2024\\
+			\hline
+			\texttt{Qwen/Qwen2.5-7B-Instruct} & Not Stated & September 18, 2024  \\
+			\hline
+			\texttt{Qwen/Qwen3-235B-A22B-Instruct-2507} & Not Stated & July 21, 2025  \\
+			\hline
+			\texttt{Qwen/Qwen3-30B-A3B-Instruct-2507} & Not Stated & July 29, 2025 \\
+			\hline
+		\end{tabular}
+\end{table}
+
+
+\begin{table}[h!]
+\centering
+\caption{Dataset Publication Dates}
+\label{tab:dataset_publication_cutoff}
+
+\begin{tabular}{p{5cm} p{3cm} p{3cm} p{3cm}}
+\hline
+\textbf{Dataset} & \textbf{Public Release Date}  \\
+\hline
+Squadv2~\cite{DBLP:journals/corr/abs-1806-03822} & 2018 \\
+HotpotQA~\cite{yang2018hotpotqa} & 2018 \\
+TrivaQA-web~\cite{2017arXivtriviaqa} & 2017 \\
+NaturalQuestionsShort~\cite{kwiatkowski2019natural} & 2019 \\
+PubMedQA~\cite{jin2019pubmedqa} & 2019 \\
+ BoolQ~\cite{clark2019boolq} & 2019 \\
+FermiQA~\cite{kalyan2021much} & 2021 \\
+MS-MARCO-QA~\cite{bajaj2016ms} & 2016 \\
+MusiqueQA~\cite{trivedi2022musique} & 2022 \\
+2WikiMultiHopQA~\cite{ho2020constructing} & 2020 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+\section{Results}
+
+
+
+
+\section{Conclusion}
+
+
+
+\newpage
+\bibliographystyle{IEEEtran}
+{\small
+\bibliography{references}
+}
+
+\newpage
+\appendix
+\input{appendix}
+
+
+\end{document}

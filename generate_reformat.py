@@ -18,7 +18,7 @@ def build_og_msg(context:str, question:str, answer:str):
     return prompt
 
 
-def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_effort:str='high') -> list[dict]:
+def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_effort:str='high', connection_parallelism:int=64) -> list[dict]:
 
     
     # Create a list to store model responses
@@ -46,7 +46,7 @@ def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_eff
     
     prompts = [build_og_msg(d['context'], d['orig_question'], d['orig_answer']) for d in model_responses]
 
-    model = SglModelAsync(remote=remote, model=model, reasoning_effort=reasoning_effort)
+    model = SglModelAsync(remote=remote, model=model, reasoning_effort=reasoning_effort, connection_parallelism=connection_parallelism)
     results, total_time = model.generate(prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
@@ -65,15 +65,15 @@ def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_eff
         res = results[i]
         orig_data = dataset[i]
         if res['error'] is not None:
-            model_responses[i]['response'] = None
+            model_responses[i]['reformat_response'] = None
             model_responses[i]['failed'] = True
             model_responses[i]['error'] = res['error']
-            model_responses[i]['scratchpad'] = res['scratchpad']
+            model_responses[i]['reformat_scratchpad'] = res['scratchpad']
             model_responses[i]['prompt'] = res['prompt']
             failed_responses.append(model_responses[i])
         else:
-            model_responses[i]['response'] = res['content']
-            model_responses[i]['scratchpad'] = res['scratchpad']
+            model_responses[i]['reformat_response'] = res['content']
+            model_responses[i]['reformat_scratchpad'] = res['scratchpad']
             parsed = answer_parser.parse_generated_open(res['content'])
             if parsed is None:
                 model_responses[i]['failed'] = True
@@ -108,6 +108,7 @@ if __name__ == '__main__':
     parser.add_argument('--remote', type=str, default="sierra")
     parser.add_argument('--model', type=str, default="meta-llama/Llama-3.3-70B-Instruct")
     parser.add_argument('--reasoning_effort', type=str, default='high', help='reasoning effort, options: high, medium, low')
+    parser.add_argument('--connection_parallelism', type=int, default=64, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
 
     args = parser.parse_args()
     # print("Generating reformatted questions")
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     
 
     base_path = os.path.splitext(args.dataset)[0]  # Remove extension
-    fn_basename = os.path.basename(base_path) + "_reformat"
+    fn_basename = os.path.basename(base_path)# + "_reformat"
     os.makedirs(args.out_dataset_dir, exist_ok=True)
     output_fn = os.path.join(args.out_dataset_dir, f'{fn_basename}.json')
 
@@ -149,7 +150,7 @@ if __name__ == '__main__':
 
     print("Dataset has %d contexts" % len(dataset))
 
-    model_responses, failed_responses = reformat_questions(dataset, args.remote, args.model, args.reasoning_effort)
+    model_responses, failed_responses = reformat_questions(dataset, args.remote, args.model, args.reasoning_effort, args.connection_parallelism)
 
     
 

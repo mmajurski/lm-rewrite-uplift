@@ -32,13 +32,13 @@ load_dotenv()
 # GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8443/v1"
 # GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
-# GRADER_MODEL="v_llm/gpt-oss-120b"
-# GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8447/v1"
-# GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
-
-GRADER_MODEL="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
-GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8446/v1"
+GRADER_MODEL="v_llm/gpt-oss-120b"
+GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8447/v1"
 GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
+
+# GRADER_MODEL="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
+# GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8446/v1"
+# GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
 
 
@@ -75,7 +75,7 @@ Answer the following open ended short answer question. The last line of your res
 
 def base_task(lcl_fp, question_key):
 
-    config = GenerateConfig(max_connections=256)
+    config = GenerateConfig(max_connections=64)
     model = get_model(model=GRADER_MODEL, base_url=GRADER_MODEL_BASE_URL, config=config, api_key=GRADER_MODEL_API_KEY)
 
     
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluates a MMLU style dataset using Inspect framework.')
     # parser.add_argument('--model', type=str, default='meta-llama/Llama-3.2-3B-Instruct')
     # parser.add_argument('--test_path', type=str, default='./data/squad_reformat_open', help='Path to the test dataset, specifically the folder containing the json dataset files.')
-    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--question_key', type=str, required=True)  # ['orig_question', 'question']
 
     args = parser.parse_args()
@@ -240,7 +240,7 @@ if __name__ == '__main__':
 
     
 
-    base_dir = './data-subset-1000'
+    base_dir = './data-subset-200'
     # ds = 'oe-Q235B'
 
     # # # disp_type = 'plain'  # full, conversation, rich, plain, none
@@ -250,7 +250,7 @@ if __name__ == '__main__':
 
     available_models = list(models_dict.keys())
 
-    for ds in ['oe-Q235B']: #, ['oe-Q235B', 'oe-gpt120b']:
+    for ds in ['oe-gpt120b']: #, ['oe-Q235B', 'oe-gpt120b']:
         print("--------------------------------")
         print(f"Processing folder {ds}")
 
