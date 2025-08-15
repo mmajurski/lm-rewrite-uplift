@@ -102,7 +102,7 @@ class SglModelAsync:
             if 'gpt-oss' in model:
                 retry_count_for_gpt_oss = 0
                 latest_error = None
-                while retry_count_for_gpt_oss < 10:
+                while retry_count_for_gpt_oss < 20:
                     try:
                         response = await client.responses.create(
                             model=model,
@@ -237,6 +237,15 @@ class SglModelAsync:
                     failed_flag = True
                     break
             if failed_flag:
+                print(80*"=")
+                print(f"Failed to generate response for some prompts")
+                # Find the first failed result and print its error
+                for idx, res in enumerate(batch_results):
+                    if res['error'] is not None:
+                        print(f"Error in prompt {i + idx}: {res['error']}")
+                        print(f"Prompt: \n\n\n{res['prompt']}\n\n\n")
+                        break
+                print(80*"=")
                 raise Exception("Failed to generate response for some prompts")
             results.extend(batch_results)
         

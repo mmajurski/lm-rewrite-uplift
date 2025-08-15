@@ -74,12 +74,12 @@ def compute_meta_scores(dataset_fp, remote, model, reformat:bool):
 
 def evaluate_dataset_answer_giveaway_features(ifp, remote: str, model: str, reformat:bool):
 
-    fns = []
+    fns = [] 
     for fn in os.listdir(ifp):
         if fn.endswith('.json'):
             fns.append(fn)
     fns.sort()
-    fns = fns[:1]
+    # fns = fns[:1]
     if len(fns) == 0:
         print(f"evaluate_dataset_answer_giveaway_features: No datasets found in {ifp}")
         return
@@ -103,12 +103,17 @@ def evaluate_dataset_answer_giveaway_features(ifp, remote: str, model: str, refo
 
 
 if __name__ == '__main__':
-    ifp = './data-subset-200/oe-Q235B-with-meta-properties/'
-    # remote = 'pn131285:8446'
-    # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
+    ifp = './data-subset-500/oe-Q235B/'
+    remote = 'pn131285:8446'
+    model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
+
+    print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
+    print(f"Evaluating answer giveaway features for {model} on the original questions")
+    evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
 
 
-    # ifp = './data-subset-200/oe-gpt120b-with-meta-properties/'
+    ifp = './data-subset-500/oe-gpt120b/'
     remote = 'pn131285:8447'
     model = 'gpt-oss-120b'
 

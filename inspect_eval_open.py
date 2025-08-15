@@ -240,7 +240,7 @@ if __name__ == '__main__':
 
     
 
-    base_dir = './data-subset-200'
+    base_dir = './data-subset-500'
     # ds = 'oe-Q235B'
 
     # # # disp_type = 'plain'  # full, conversation, rich, plain, none
@@ -250,7 +250,7 @@ if __name__ == '__main__':
 
     available_models = list(models_dict.keys())
 
-    for ds in ['oe-gpt120b']: #, ['oe-Q235B', 'oe-gpt120b']:
+    for ds in ['oe-Q235B-filtered', 'oe-gpt120b-filtered']:
         print("--------------------------------")
         print(f"Processing folder {ds}")
 
