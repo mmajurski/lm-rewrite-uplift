@@ -1,11 +1,10 @@
 from typing import Any
 
-import inspect_ai
+# import inspect_ai
 import openai
 from inspect_ai.model import GenerateConfig, modelapi
 from inspect_ai.model._providers.openai import OpenAIAPI
 from inspect_ai.model._providers.util import model_base_url
-from inspect_ai.model._providers.openai import OpenAIAPI
 import httpx
 
 
@@ -31,7 +30,7 @@ class VllmOpenAI(OpenAIAPI):
         # vLLM hosting setup
         # http_client = OpenAIAsyncHttpxClient(verify=False)
         # vllm serve meta-llama/Llama-3.3-70B-Instruct --port 18443 --dtype bfloat16 --tensor-parallel-size 8
-        http_client = httpx.AsyncClient(verify=False)
+        http_client = httpx.AsyncClient(verify=False, timeout=120.0)
         
         self.client = openai.AsyncOpenAI(
             api_key=self.api_key,

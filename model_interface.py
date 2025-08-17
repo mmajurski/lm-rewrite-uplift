@@ -85,7 +85,7 @@ class SglModelAsync:
         self.client = openai.AsyncOpenAI(
             base_url=self.url, 
             api_key=self.api_key,
-            http_client=httpx.AsyncClient(verify=False)
+            http_client=httpx.AsyncClient(verify=False, timeout=120.0)
         )
         
     @staticmethod

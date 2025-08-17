@@ -60,18 +60,19 @@ plot_markers = [
 
 
 
-
-main_dir = './data-subset-1000/'
-ref_question_folder = os.path.join(main_dir, 'logs-oe-Q235B-orig')
-reformat_question_folder = os.path.join(main_dir, 'logs-oe-Q235B-reformat')
+generating_model_name = 'Q235B'
+# generating_model_name = 'gpt120b'
+main_dir = './data-subset-500/'
+ref_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}-filtered-orig')
+reformat_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}-filtered-reformat')
 
 
 ref_logs = [fn for fn in os.listdir(ref_question_folder) if fn.endswith('.json')]
 reformat_logs = [fn for fn in os.listdir(reformat_question_folder) if fn.endswith('.json')]
 
 
-if os.path.exists('impact_of_reformat.json'):
-    with open('impact_of_reformat.json','r') as f:
+if os.path.exists(f'impact_of_reformat_{generating_model_name}.json'):
+    with open(f'impact_of_reformat_{generating_model_name}.json','r') as f:
         impact_of_reformat = json.load(f)
 else:
     impact_of_reformat = dict()
@@ -88,7 +89,7 @@ else:
         model_name = data['eval']['model'].replace("v_llm/", "")
         dataset_name = data['eval']['task_registry_name']
 
-        d_fp = data['eval']['task_args']['dataset_fldr']#.replace('mmajursk','mmajurski')
+        d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
         with open(d_fp, 'r') as f:
             source_dataset = json.load(f)
 
@@ -117,7 +118,7 @@ else:
         model_name = data['eval']['model'].replace("v_llm/", "")
         dataset_name = data['eval']['task_registry_name']
 
-        d_fp = data['eval']['task_args']['dataset_fldr']#.replace('mmajursk','mmajurski')
+        d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
         with open(d_fp, 'r') as f:
             source_dataset = json.load(f)
 
@@ -153,7 +154,7 @@ else:
 
     # Replace the original dict with the filtered one
     impact_of_reformat = filtered_impact
-    with open('impact_of_reformat.json','w') as f:
+    with open(f'impact_of_reformat_{generating_model_name}.json','w') as f:
         json.dump(impact_of_reformat, f, indent=2)
 
 
@@ -188,7 +189,7 @@ for dataset_name, questions in impact_of_reformat.items():
         }
 
 # Save the average uplift data
-with open('avg_uplift_per_model_dataset.json', 'w') as f:
+with open(f'avg_uplift_per_model_dataset_{generating_model_name}.json', 'w') as f:
     json.dump(avg_uplift_per_model_dataset, f, indent=2)
 
 
@@ -203,12 +204,20 @@ all_models = set()
 for dataset_name, models in avg_uplift_per_model_dataset.items():
     all_models.update(models.keys())
 
+all_models = list(all_models)
+all_models.sort()
+
 # Create a scatterplot for each model
 for model_name in all_models:
     plt.figure(figsize=(8, 8))
+
+    ds_keys = list(avg_uplift_per_model_dataset.keys())
+    ds_keys.sort()
     
     # Plot data points for each dataset
-    for dataset_idx, (dataset_name, models) in enumerate(avg_uplift_per_model_dataset.items()):
+    for dataset_idx, dataset_name in enumerate(ds_keys):
+        models = avg_uplift_per_model_dataset[dataset_name]
+
         if model_name in models:
             ref_acc = models[model_name]['avg_ref_acc']
             reformat_acc = models[model_name]['avg_reformat_acc']
@@ -243,8 +252,8 @@ for model_name in all_models:
     plt.ylim(0, 1)
     
     # Save the plot
-    os.makedirs('./imgs', exist_ok=True)
-    plt.savefig(f'./imgs/scatterplot_{model_name.replace("/", "_")}.svg', dpi=300, bbox_inches='tight')
+    os.makedirs(f'./imgs/{generating_model_name}', exist_ok=True)
+    plt.savefig(f'./imgs/{generating_model_name}/scatterplot_{model_name.replace("/", "_")}.svg', dpi=300, bbox_inches='tight')
     plt.close()
 
 print(f"\nScatterplots saved for {len(all_models)} models")
