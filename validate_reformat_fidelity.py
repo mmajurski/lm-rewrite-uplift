@@ -3,8 +3,6 @@ import json
 import numpy as np
 import sys
 
-# Add the parent directory to the path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 
@@ -95,7 +93,7 @@ def validate_reformat_fidelity(ifp, remote:str, model:str):
     print(f"validate_reformat_fidelity: Datasets: {fns}")
 
 
-    force_flag = True
+    force_flag = False
     print(f"validate_reformat_fidelity: Validating reformat fidelity for {len(fns)} datasets")
 
     for i, fn in enumerate(fns):
@@ -111,66 +109,51 @@ def validate_reformat_fidelity(ifp, remote:str, model:str):
     avg_question_similarity_score = {}
     avg_answer_similarity_score = {}
     for fn in fns:
-        if 'sec_qa_reformat' in fn:
-            continue
         dataset_fp = f"{ifp}/{fn}"
         with open(dataset_fp, 'r') as f:
             data = json.load(f)
-
-        invalid_idx = list()
-        for i in range(len(data)):
-            d = data[i]
-            if d.get('reformat_question_similarity_score') is None or not (1 <= d['reformat_question_similarity_score'] <= 10):
-                invalid_idx.append(i)
-            if d.get('reformat_answer_similarity_score') is None or not (1 <= d['reformat_answer_similarity_score'] <= 10):
-                invalid_idx.append(i)
-
-        invalid_idx = list(set(invalid_idx))
-        
-        # Print invalid data entries
-        if invalid_idx:
-            print(f"Found {len(invalid_idx)} invalid entries in dataset {fn}:")
-            for idx in invalid_idx: 
-                print(f"  Entry {idx}:")
-                print(f"    Question: {data[idx]['question']}")
-                print(f"    Reformat Question Similarity: {data[idx].get('reformat_question_similarity_score', 'missing')}")
-                print(f"    Reformat Answer Similarity: {data[idx].get('reformat_answer_similarity_score', 'missing')}")
-                print()
-
-            raise Exception(f"Found {len(invalid_idx)} invalid entries in dataset {fn}")
         
         
         avg_question_similarity_score[fn] = np.mean([d['reformat_question_similarity_score'] for d in data])
         avg_answer_similarity_score[fn] = np.mean([d['reformat_answer_similarity_score'] for d in data])
-        nb_failures = sum([1 for d in data if d.get('reformat_answer_similarity_score') < 5])
-        failed_entries = [d for d in data if d.get('reformat_answer_similarity_score') < 5]
+        failed_entries = [d for d in data if d.get('reformat_answer_similarity_score') < 5 or d.get('reformat_question_similarity_score') < 5]
 
-        print(f"Dataset: {os.path.basename(fn)}")
-        print(f"  Average reformat question similarity score: {avg_question_similarity_score[fn]:.4f}")
-        print(f"  Average reformat answer similarity score: {avg_answer_similarity_score[fn]:.4f}")
-        print(f"  Number of answer preservation failures: {nb_failures}")
-        for d in failed_entries:
-            print(f"    Question: {d['question']}")
-            print(f"    Reformat Question Similarity: {d.get('reformat_question_similarity_score', 'missing')}")
-            print(f"    Reformat Answer Similarity: {d.get('reformat_answer_similarity_score', 'missing')}")
-            print(f"    GT Answer: {d.get('orig_answer', 'missing')}")
-            print(f"    Reformat Answer: {d.get('answer', 'missing')}")
+        if len(failed_entries) > 0:
+            print(f"Dataset: {os.path.basename(fn)}")
+            print(f"  Average reformat question similarity score: {avg_question_similarity_score[fn]:.4f}")
+            print(f"  Average reformat answer similarity score: {avg_answer_similarity_score[fn]:.4f}")
+            print(f"  Number of answer preservation failures: {len(failed_entries)}/{len(data)}")
+            for d in failed_entries:
+                print(f"    Orig Question: {d['orig_question']}")
+                print(f"    Reformat Question: {d['question']}")
+                print(f"    Reformat Question Similarity: {d.get('reformat_question_similarity_score', 'missing')}")
+                print(f"    Orig Answer: {d.get('orig_answer', 'missing')}")
+                print(f"    Reformat Answer: {d.get('answer', 'missing')}")
+                print(f"    Reformat Answer Similarity: {d.get('reformat_answer_similarity_score', 'missing')}")
+                print()
             print()
-        print()
+
+
 
 
 
 if __name__ == '__main__':
-    ifp = './data-subset-1000/oe-gpt120b/'
+    remote = 'pn131285:8447'
+    model = 'gpt-oss-120b'
+    # remote = 'pn131285:8446'
+    # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
 
-    model="gpt-oss-120b"
-    remote="pn131285:8447"
 
-    # model="Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
-    # remote="pn131285:8446"
-    
-    validate_reformat_fidelity(ifp, remote, model)
+    for model_name in ['gpt120b','Q235B']:
+        ifp = f'./data-subset-500/oe-{model_name}/'
+        print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
+        validate_reformat_fidelity(ifp, remote, model)
 
+
+    for model_name in ['gpt120b','Q235B']:
+        ifp = f'./data-post-cutoff/oe-{model_name}/'
+        print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
+        validate_reformat_fidelity(ifp, remote, model)
 
 
 

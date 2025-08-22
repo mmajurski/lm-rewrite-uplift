@@ -108,7 +108,7 @@ You will be evaluating and judging the alignment of test and evaluation of quest
 
 ### Metrics
 
-1. **Question Similarity:** Rate from 1 to 10 how semantically similar `<question1>` is to `<question2>`. While the wording and phrasing can be drastically different, as long as the same information is being asked about the rating should be high. If the two questions are asking about different topics or different elements of the same topics, the rating should be low.
+1. **Question Similarity:** Rate from 1 to 10 how semantically similar `<question1>` is to `<question2>`. While the wording and phrasing can be drastically different, as long as the same information is being asked about the rating should be high. If the two questions are asking about different topics or different elements of the same topics, the rating should be low. 
 
 2. **Answer Similarity:** Rate from 1 to 10 how semantically similar `<answer1>` is to `<answer2>`. While the wording and phrasing can be drastically different, as long as the same information is present in the answer the rating should be high. 
 
@@ -140,11 +140,11 @@ Begin by thoughtfully analyzing the provided context within `<document_analysis>
 - Ensure rigorous adherence to output formatting.
 
 
+<context>{context}</context>
 <question1>{question1}</question1>
 <answer1>{answer1}</answer1>
 <question2>{question2}</question2>
 <answer2>{answer2}</answer2>
-<context>{context}</context>
 """
 
 

@@ -2,36 +2,6 @@ import numpy as np
 import re
 
 
-def parse_topic_extraction(response: str) -> dict:
-   
-    result = list()
-    
-    # Preprocess the response to remove markdown formatting
-    # Replace **text** with text to handle bold formatting
-    cleaned_response = re.sub(r'\*\*([^*]+)\*\*', r'\1', response)
-    # Remove dash prefixes at the beginning of lines
-    cleaned_response = re.sub(r'(?:^|\n)\s*-\s*', r'\n', cleaned_response)
-    # Remove leading whitespace from all lines
-    cleaned_response = re.sub(r'(?:^|\n)\s+', r'\n', cleaned_response)
-
-    # Extract content between <output_format> and </output_format> tags if present
-    output_format_pattern = r'<output_format>(.*?)</output_format>'
-    output_format_matches = list(re.finditer(output_format_pattern, cleaned_response, re.DOTALL))
-    
-    if output_format_matches:
-        # If output format tags are found, use only the content from the last match
-        cleaned_response = output_format_matches[-1].group(1).strip()
-
-    # Find all lines starting with Topic: and extract the rest of the line
-    topic_pattern = r'(?:^|\n)\s*Topic\s*:\s*([^\n]+)'
-    topics = re.findall(topic_pattern, cleaned_response)
-    
-    # Add each found topic to the result list
-    for topic in topics:
-        result.append(topic.strip())
-
-    return result
-
 
 def parse_explanation_validity_numbers(response: str, valid_options: list = None) -> dict:
    
@@ -247,6 +217,9 @@ def parse_answer_giveaway_numbers(response: str, valid_options: list = None) -> 
 
 
 
+
+
+
 def parse_generated_open(response: str) -> dict:
     """
     Parses an LLM response to extract a question, correct answer, and answer options.
@@ -319,6 +292,8 @@ def parse_generated_open(response: str) -> dict:
     answer_patterns = [
         # Format: Correct Answer: multi-line text
         r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*(.+?)(?:\n\s*$|$)",
+        # Also match if the answer is on the next line after the label
+        r"(?:^|\n)\s*Correct\s+Answer\s*:?\s*((?:.|\n)+?)(?=(?:\n\s*\w+\s*:|$))",
         # Format: Answer: multi-line text
         r"(?:^|\n)\s*Answer\s*:?\s*(.+?)(?:\n\s*$|$)"
     ]

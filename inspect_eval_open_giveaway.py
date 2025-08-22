@@ -85,7 +85,11 @@ def base_task(lcl_fp, question_key):
     # random.shuffle(ds)
     samples = list()
     for row in ds:
-        samples.append(Sample(input=row[question_key], target=str(row['orig_answer'])))
+        context = row['context']
+        question = row[question_key]
+        input = f"<context>{context}</context>\n\n\n\nQuestion: {question}"
+
+        samples.append(Sample(input=input, target=str(row['orig_answer'])))
     
     return Task(
         dataset = samples,
@@ -146,6 +150,7 @@ def squadv2(dataset_fldr, question_key):
 def triva_qa(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
+
 @task
 def ai_plan(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
@@ -159,11 +164,11 @@ def arXiv_2502_17521v1(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 @task
-def arXiv_2502_17521v1_yb(dataset_fldr, question_key):
+def hle(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 @task
-def hle(dataset_fldr, question_key):
+def arXiv_2502_17521v1_yb(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 
@@ -213,6 +218,7 @@ def get_task(name: str, dataset_fldr: str, question_key: str):
 
 
 
+
 if __name__ == '__main__':
     import argparse
 
@@ -220,7 +226,7 @@ if __name__ == '__main__':
     # parser.add_argument('--model', type=str, default='meta-llama/Llama-3.2-3B-Instruct')
     # parser.add_argument('--test_path', type=str, default='./data/squad_reformat_open', help='Path to the test dataset, specifically the folder containing the json dataset files.')
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--question_key', type=str, required=True)  # ['orig_question', 'question']
+    parser.add_argument('--question_key', type=str, default='orig_question')#, required=True)  # ['orig_question', 'question']
     parser.add_argument('--base_dir', type=str, required=True)
 
     args = parser.parse_args()
@@ -229,7 +235,7 @@ if __name__ == '__main__':
         raise ValueError(f"Invalid question key: {question_key}")
 
 
-    config = GenerateConfig(max_connections=args.batch_size, timeout=300)  #max_tokens=8192
+    config = GenerateConfig(max_connections=args.batch_size, timeout=300) # max_tokens=8192
     models = list()
 
 
@@ -267,6 +273,10 @@ if __name__ == '__main__':
 
     
 
+
+
+    
+
     # base_dir = './data-subset-500'
     # base_dir = './data-post-cutoff'
     base_dir = args.base_dir
@@ -283,10 +293,10 @@ if __name__ == '__main__':
         dataset_fldr = f"{base_dir}/{ds}"
         if not os.path.exists(dataset_fldr):
             continue
+
         print("--------------------------------")
         print(f"Processing folder {ds}")
 
-        
         
 
         available_task_names_dict = get_task_dir_dict(dataset_fldr)
@@ -307,9 +317,9 @@ if __name__ == '__main__':
 
         
         if question_key == 'orig_question':
-            log_dir = os.path.join(base_dir, f"logs-{ds}-orig")  
+            log_dir = os.path.join(base_dir, f"logs-{ds}-orig-giveaway")  
         else:
-            log_dir = os.path.join(base_dir, f"logs-{ds}-reformat") 
+            log_dir = os.path.join(base_dir, f"logs-{ds}-reformat-giveaway") 
 
         print("discovering completed logs...")
         completed_logs, completed_fns = utils.get_completed_logs(log_dir)

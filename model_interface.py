@@ -85,7 +85,7 @@ class SglModelAsync:
         self.client = openai.AsyncOpenAI(
             base_url=self.url, 
             api_key=self.api_key,
-            http_client=httpx.AsyncClient(verify=False, timeout=120.0)
+            http_client=httpx.AsyncClient(verify=False, timeout=600.0)
         )
         
     @staticmethod
@@ -102,7 +102,8 @@ class SglModelAsync:
             if 'gpt-oss' in model:
                 retry_count_for_gpt_oss = 0
                 latest_error = None
-                while retry_count_for_gpt_oss < 20:
+                retry_limit = 20
+                while retry_count_for_gpt_oss < retry_limit:
                     try:
                         response = await client.responses.create(
                             model=model,
@@ -120,7 +121,7 @@ class SglModelAsync:
                         latest_error = e
                         retry_count_for_gpt_oss += 1
                         time.sleep(0.2)
-                if retry_count_for_gpt_oss == 3:
+                if retry_count_for_gpt_oss >= retry_limit:
                     raise Exception(f"Failed to generate response for GPT-OSS: {latest_error}")
                 
                 
