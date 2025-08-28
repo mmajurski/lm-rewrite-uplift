@@ -40,10 +40,13 @@ for fldr in fldrs:
             print(f"Score {score}: {gpt_hist[score]}")
 
         giveaway_scores = np.asarray([d['reformat_answer_giveaway_score'] for d in data])
+        giveaway_orig_scores = np.asarray([d['orig_answer_giveaway_score'] for d in data])
         answer_sim_scores = np.asarray([d['reformat_answer_similarity_score'] for d in data])
-        mask1 = giveaway_scores <= answer_sim_scores + 1
+        question_sim_scores = np.asarray([d['reformat_answer_similarity_score'] for d in data])
+        mask1 = giveaway_scores <= giveaway_orig_scores + 1
         mask2 = answer_sim_scores >= score_thres
-        mask = mask1 & mask2
+        mask3 = question_sim_scores >= score_thres
+        mask = mask1 & mask2 & mask3
 
         data = [d_gpt for i, d_gpt in enumerate(data) if mask[i]]
 

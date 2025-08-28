@@ -27,6 +27,5 @@ def get_completed_logs(fp: str) -> list[dict]:
             completed_logs.append(data['eval'])
             completed_fns.append(fn)
         else:
-            import os
             os.remove(fn)
     return completed_logs, completed_fns

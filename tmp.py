@@ -31,8 +31,8 @@ import answer_parser
 
 
 
-response = """<output_format>\nQuestion: The United States\u2019 AI Action Plan assigns several federal agencies the responsibility of eliminating regulatory obstacles that impede artificial\u2011intelligence innovation. Identify each of these primary agencies and describe one concrete step that each agency is directed to take to remove such barriers.\n\nExplanation: The answer lists the agencies named in the plan\u2014OSTP, OMB, FCC, and FTC\u2014and provides the specific action each is tasked with (e.g., OSTP\u2019s request for information, OMB\u2019s review and repeal of hindering regulations, FCC\u2019s assessment of state AI rules under the Communications Act, and FTC\u2019s review of investigations and orders to avoid undue burdens on AI).\n\nCorrect Answer:\n- Office of Science and Technology Policy (OSTP) \u2013 launch a Request for Information from businesses and the public about federal regulations that hinder AI innovation and work with relevant agencies to address them.\n- Office of Management and Budget (OMB) \u2013 work with all federal agencies to identify, revise, or repeal regulations, rules, memoranda, guidance, and agreements that unnecessarily impede AI development or deployment.\n- Federal Communications Commission (FCC) \u2013 evaluate whether state AI regulations interfere with the FCC\u2019s obligations and authority under the Communications Act of 1934.\n- Federal Trade Commission (FTC) \u2013 review ongoing investigations, final orders, consent decrees, and injunctions to ensure they do not unduly burden AI innovation and, where appropriate, seek to modify or set aside such actions.\n</output_format>"""
-answer_parser.parse_generated_open(response)
+# response = """<output_format>\nQuestion: The United States\u2019 AI Action Plan assigns several federal agencies the responsibility of eliminating regulatory obstacles that impede artificial\u2011intelligence innovation. Identify each of these primary agencies and describe one concrete step that each agency is directed to take to remove such barriers.\n\nExplanation: The answer lists the agencies named in the plan\u2014OSTP, OMB, FCC, and FTC\u2014and provides the specific action each is tasked with (e.g., OSTP\u2019s request for information, OMB\u2019s review and repeal of hindering regulations, FCC\u2019s assessment of state AI rules under the Communications Act, and FTC\u2019s review of investigations and orders to avoid undue burdens on AI).\n\nCorrect Answer:\n- Office of Science and Technology Policy (OSTP) \u2013 launch a Request for Information from businesses and the public about federal regulations that hinder AI innovation and work with relevant agencies to address them.\n- Office of Management and Budget (OMB) \u2013 work with all federal agencies to identify, revise, or repeal regulations, rules, memoranda, guidance, and agreements that unnecessarily impede AI development or deployment.\n- Federal Communications Commission (FCC) \u2013 evaluate whether state AI regulations interfere with the FCC\u2019s obligations and authority under the Communications Act of 1934.\n- Federal Trade Commission (FTC) \u2013 review ongoing investigations, final orders, consent decrees, and injunctions to ensure they do not unduly burden AI innovation and, where appropriate, seek to modify or set aside such actions.\n</output_format>"""
+# answer_parser.parse_generated_open(response)
 
 
 
@@ -50,3 +50,50 @@ answer_parser.parse_generated_open(response)
 # ifp = ifp.replace(".json", "-sub.json")
 # with open(ifp, 'w') as f_out:
 #     json.dump(data, f_out, indent=2)
+
+
+
+# fp = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500/logs-oe-Q235B-filtered-orig'
+# import os
+# import json
+# fns = [os.path.join(fp, fn) for fn in os.listdir(fp) if fn.endswith('.json')]
+# fns.sort()
+# models_dict = dict()
+# models = set()
+# datasets = set()
+
+
+# for fn in fns:
+#     with open(fn, 'r') as f:
+#         data = json.load(f)
+
+#     model_name = data['eval']['model']
+#     if model_name == 'v_llm/Llama-4-Maverick-17B-128E-Instruct-FP8':
+#         os.remove(fn)
+    
+fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan.json'
+with open(fn, 'r') as f:
+    data = json.load(f)
+
+for sample in data:
+    keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
+    for key in list(sample.keys()):
+        if key not in keys_to_keep:
+            del sample[key]
+
+with open('ai_plan-debug.json', 'w') as f:
+    json.dump(data, f, indent=2)
+
+
+fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan_yb.json'
+with open(fn, 'r') as f:
+    data = json.load(f)
+
+for sample in data:
+    keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
+    for key in list(sample.keys()):
+        if key not in keys_to_keep:
+            del sample[key]
+
+with open('ai_plan_yb-debug.json', 'w') as f:
+    json.dump(data, f, indent=2)

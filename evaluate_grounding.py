@@ -33,17 +33,10 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
     else:
         model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['orig_question'], answer=d['orig_answer']) for d in dataset]
 
-    model = SglModelAsync(remote=remote, model=model, connection_parallelism=16)
+    model = SglModelAsync(remote=remote, model=model, connection_parallelism=512)
     results, total_time = model.generate(model_prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
-
-    total_input_tokens = sum([res['input_tokens'] for res in results])
-    total_output_tokens = sum([res['output_tokens'] for res in results])
-    total_tokens = sum([res['total_tokens'] for res in results])
-    print(f"total input tokens: {total_input_tokens}")
-    print(f"total output tokens: {total_output_tokens}")
-    print(f"total tokens: {total_tokens}")
 
     for i in range(len(results)):
         res = results[i]
@@ -154,9 +147,22 @@ if __name__ == '__main__':
     # evaluate_dataset_relevance_features(ifp, True, remote, model)
     # evaluate_dataset_relevance_features(ifp, False, remote, model)
 
-
-    ifp = './data-subset-1000/oe-gpt120b-with-meta-properties/'
     remote = 'pn131285:8447'
     model = 'gpt-oss-120b'
+
+    ifp = './data-subset-500/oe-gpt120b-filtered/'
+    evaluate_dataset_relevance_features(ifp, True, remote, model)
+    evaluate_dataset_relevance_features(ifp, False, remote, model)
+
+    ifp = './data-subset-500/oe-Q235B-filtered/'
+    evaluate_dataset_relevance_features(ifp, True, remote, model)
+    evaluate_dataset_relevance_features(ifp, False, remote, model)
+
+
+    ifp = './data-post-cutoff/oe-gpt120b-filtered/'
+    evaluate_dataset_relevance_features(ifp, True, remote, model)
+    evaluate_dataset_relevance_features(ifp, False, remote, model)
+
+    ifp = './data-post-cutoff/oe-Q235B-filtered/'
     evaluate_dataset_relevance_features(ifp, True, remote, model)
     evaluate_dataset_relevance_features(ifp, False, remote, model)

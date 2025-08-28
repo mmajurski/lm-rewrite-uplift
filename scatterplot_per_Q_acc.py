@@ -112,9 +112,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                     impact_of_reformat[dataset_name] = dict()
                 
                 samples = data['samples']
-                for i, sample in enumerate(samples):
+                for q_id, sample in enumerate(samples):
                     question = sample['input']
-                    q_id = sample['id']-1  # counting starts from 1
                     orig_question = source_dataset[q_id]['orig_question']
                     reformat_question = source_dataset[q_id]['question']
                     reformat_answer = source_dataset[q_id]['answer']

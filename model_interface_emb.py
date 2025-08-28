@@ -4,7 +4,6 @@ import openai
 import asyncio
 from openai import AsyncOpenAI
 import time
-from openai.types.responses import ResponseOutputMessage, ResponseReasoningItem
 
 
 from dotenv import load_dotenv
@@ -65,13 +64,11 @@ def translate_remote(remote:str) -> tuple[str, str]:
     
 
 
-class SglModelAsync:
-    def __init__(self, model:str, remote:str, reasoning_effort:str='medium', connection_parallelism:int=64):
+class SglModelAsyncEmb:
+    def __init__(self, model:str, remote:str, connection_parallelism:int=64):
         self.model = model
         self.remote = remote
         self.url, self.api_key = translate_remote(remote)
-        self.reasoning_effort = reasoning_effort
-        print(f"SglModelAsync selected reasoning_effort: {reasoning_effort}")
 
         self.connection_parallelism = connection_parallelism
         if 'openai' in self.url:
@@ -85,75 +82,36 @@ class SglModelAsync:
         self.client = openai.AsyncOpenAI(
             base_url=self.url, 
             api_key=self.api_key,
-            http_client=httpx.AsyncClient(verify=False, timeout=600.0)
+            http_client=httpx.AsyncClient(verify=False, timeout=120.0)
         )
         
     @staticmethod
-    async def generate_text_async(model, client, prompt, request_id, reasoning_effort='medium'):
+    async def generate_text_async(model, client, prompt, request_id):
         start_time = time.time()
         try:
             
         
-            # https://cdn.openai.com/pdf/419b6906-9da6-406c-a19d-1bb078ac7637/oai_gpt-oss_model_card.pdf
-            # System > Developer > User > Assistant > Tool.
-
-            instructions = "You are an assistant that doesn't make mistakes. If a reference format is presented to you, you follow it perfectly without making errors."
+            response = await client.embeddings.create(
+                            model=model,
+                            input=prompt
+                        )
             
             
-            retry_count = 0
-            latest_error = None
-            retry_limit = 10
-            while retry_count < retry_limit:
-                try:
-                    response = await client.responses.create(
-                        model=model,
-                        instructions=instructions,
-                        input=prompt,
-                        max_output_tokens=32000, 
-                        temperature=0.7,
-                        stream=False,
-                        reasoning={'effort': reasoning_effort},
-                    )
-                    if retry_count > 0:
-                        print(f"Model took {retry_count} retries, but succeeded")
-                    break
-                except Exception as e:
-                    latest_error = e
-                    retry_count += 1
-                    time.sleep(0.2)
-            if retry_count >= retry_limit:
-                raise Exception(f"Failed to generate response: {latest_error}")
-                
-                
             elapsed = time.time() - start_time
-
-            
-            content = ""
-            scratchpad = ""
-            for c in response.output:
-                if isinstance(c, ResponseOutputMessage):
-                    content = c.content[0].text
-                if isinstance(c, ResponseReasoningItem):
-                    scratchpad = c.content[0].text
-
+            emb_vec = response.data[0].embedding
             
             result = {
                 "request_id": request_id,
-                "content": content,
-                "scratchpad": scratchpad,
+                "embedding": emb_vec,
                 "error": None,
                 "elapsed_time": elapsed,
-                # "prompt": prompt
             }
-            if content.isspace():
-                result['error'] = "Empty response"
             return result
         except Exception as e:
             # optional handling here, but for now nothing to do
             result = {
                 "request_id": request_id,
-                "content": None,
-                "scratchpad": None,
+                "embedding": None,
                 "error": str(e),
                 "elapsed_time": time.time() - start_time,
                 "prompt": prompt
@@ -177,7 +135,7 @@ class SglModelAsync:
             
             # Create tasks for this batch with the shared client
             batch_tasks = [
-                self.generate_text_async(self.model, self.client, prompt, i+j, self.reasoning_effort) 
+                self.generate_text_async(self.model, self.client, prompt, i+j) 
                 for j, prompt in enumerate(batch_prompts)
             ]
 
@@ -213,30 +171,3 @@ class SglModelAsync:
 
     
 
-
-# Example usage
-if __name__ == "__main__":
-    async def main():
-        model = SglModelAsync()
-        import json
-        # load the squadv2 dataset subset
-        with open('squadv2_subset.json', 'r') as f:
-            dataset = json.load(f)
-        dataset = dataset[:32]
-
-        contexts = [item['context'] for item in dataset]
-
-        # Async usage
-        results, total_time = await model.generate_async(contexts)
-        
-        # Or synchronous usage
-        # results, total_time = model.generate(contexts)
-        
-        res = results[0]
-        print(res)
-        print(f"in total took: {total_time} seconds")
-        print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
-
-    asyncio.run(main())
-    
-    
