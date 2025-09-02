@@ -22,6 +22,26 @@ def get_key_prefix(reformat: bool):
 def compute_meta_scores(dataset_fp, remote, model, reformat=False):
     with open(dataset_fp, 'r') as f:
         dataset = json.load(f)
+
+    any_missing = False
+    k1 = f'{get_key_prefix(reformat)}question_difficulty_score'
+    for d in dataset:
+        if k1 not in d or d[k1] is None:
+            any_missing = True
+    if not any_missing:
+        return
+    k1 = f'{get_key_prefix(reformat)}question_groundedness_score'
+    for d in dataset:
+        if k1 not in d or d[k1] is None:
+            any_missing = True
+    if not any_missing:
+        return
+    k1 = f'{get_key_prefix(reformat)}question_clarity_score'
+    for d in dataset:
+        if k1 not in d or d[k1] is None:
+            any_missing = True
+    if not any_missing:
+        return
     
     
     print(f"Computing meta properties for {dataset_fp}")
@@ -33,7 +53,7 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
     else:
         model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['orig_question'], answer=d['orig_answer']) for d in dataset]
 
-    model = SglModelAsync(remote=remote, model=model, connection_parallelism=512)
+    model = SglModelAsync(remote=remote, model=model, connection_parallelism=64)
     results, total_time = model.generate(model_prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
@@ -46,9 +66,6 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
             parsed = answer_parser.parse_meta_properties_numbers(res['content'], valid_options=[1,2,3,4,5,6,7,8,9,10])
             if parsed is None:
                 raise Exception(f"Failed to parse response: {res['content']}")
-                dataset[i]['question_clarity_score'] = None  
-                dataset[i]['question_difficulty_score'] = None
-                dataset[i]['question_groundedness_score'] = None
             else:
                 dataset[i][f'{get_key_prefix(reformat)}question_clarity_score'] = parsed['clarity_score']
                 dataset[i][f'{get_key_prefix(reformat)}question_difficulty_score'] = parsed['difficulty_score']

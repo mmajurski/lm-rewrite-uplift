@@ -40,17 +40,10 @@ def compute_meta_scores(dataset_fp, remote, model, reformat:bool, force_flag:boo
         model_prompts = [prompts.ANSWER_GIVEAWAY_PROMPT.format(context=d.get('context', ''), question=d['orig_question'], answer=d['orig_answer']) for d in dataset]
     
 
-    model = SglModelAsync(remote=remote, model=model, connection_parallelism=64, reasoning_effort='high')
+    model = SglModelAsync(remote=remote, model=model, connection_parallelism=256, reasoning_effort='high')
     results, total_time = model.generate(model_prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
-
-    total_input_tokens = sum([res['input_tokens'] for res in results])
-    total_output_tokens = sum([res['output_tokens'] for res in results])
-    total_tokens = sum([res['total_tokens'] for res in results])
-    print(f"total input tokens: {total_input_tokens}")
-    print(f"total output tokens: {total_output_tokens}")
-    print(f"total tokens: {total_tokens}")
 
     
     for i in range(len(results)):
@@ -133,16 +126,24 @@ if __name__ == '__main__':
     model = 'gpt-oss-120b'
 
 
-    for model_name in ['gpt120b','Q235B']:
-        ifp = f'./data-subset-500/oe-{model_name}/'
-        print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
-        evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
-        print(f"Evaluating answer giveaway features for {model} on the original questions")
-        evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
+    # for model_name in ['gpt120b','Q235B']:
+    #     ifp = f'./data-subset-500/oe-{model_name}/'
+    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
+    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
 
 
-    for model_name in ['gpt120b','Q235B']:
-        ifp = f'./data-post-cutoff/oe-{model_name}/'
+    # for model_name in ['gpt120b','Q235B']:
+    #     ifp = f'./data-post-cutoff/oe-{model_name}/'
+    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
+    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
+
+
+    for model_name in ['Q235B']:
+        ifp = f'./data-subset-500-SU/oe-{model_name}/'
         print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
         evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
         print(f"Evaluating answer giveaway features for {model} on the original questions")

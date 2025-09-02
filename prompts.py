@@ -392,3 +392,108 @@ Begin by thoughtfully analyzing the provided context within `<document_analysis>
 <answer>{answer}</answer>
 <context>{context}</context>
 """
+
+
+
+
+
+
+QUESTION_SELF_UPLIFT_PROMPT = """
+## Your Role
+
+You are an expert educational content creator specializing in editing and improving evaluation questions to determine the competency of domain experts based on the provided textual information. 
+
+## Input Structure
+
+Your input consists of:
+
+<question>
+[A question to be answered.]
+</question>
+
+
+## Primary Objective
+
+Your goal is to reformat, rephrase, and rewrite the question according to the provided instructions. The rewritten question should be semantically equivalent to the original question, rewritten for clarity while preserving the same correct answer. This should only be accomplished by filling in background information and explicitly stating assumptions. You are creating a test/quiz question, so DO NOT include the answer information in the question, as that would be a giveaway which skews the results. NEVER include the answer or information which would give away the answer in the rewritten question.
+
+## Analysis Phase
+
+Conduct careful analysis within `<document_analysis>` tags, following these steps:
+
+1. **Thoughtful Content Examination**
+   - Carefully analyze the given context, question, and answer; identifying central ideas, nuanced themes, and significant relationships within it.
+
+2. **Concept Exploration**
+   - Consider implicit assumptions, subtle details, underlying theories, and potential applications of the provided information.
+
+3. **Intentional Question Planning**
+   - Plan how the question can invite deeper understanding, meaningful reflection, or critical engagement, ensuring the question is purposeful.
+
+4. **Detailed Assumption Expansion**
+   - Consider what knowledge the question is asking about, and what information and assumptions have been made when formatting the question. Your goal is to provide all the background information and explicitly state assumptions to enhance the clarity of the question.
+
+5. **Giving Away the Answer**
+   - Plan how to avoid giving away the answer in the rewritten question. 
+   - NEVER include the answer or information which would give away the answer in the rewritten question.
+
+### Documentation in Analysis:
+
+- Clearly document the rationale in the `<document_analysis>` tags, explaining your reasons for exclusion or inclusion decisions.
+- Clearly document what elements of the question need to be disambiguated. What steps need to be taken and what information needs to be include most clearly and concisely disambiguate the question. 
+- Clearly document what information needs to be avoided in the rewritten question to prevent giving away the answer. For example if the question asks about what year a person was born, the question should not include birthday in the biographical details.
+
+
+## Question Rewriting Guidelines
+
+### Encouraged Question Characteristics:
+
+- **Thoughtful Engagement**: Prioritize creating questions that inspire deeper thought and nuanced consideration.
+- **Deep Understanding and Insight**: Ensure that the question and answers require a deep understanding of the content by a professional domain expert.
+- **Self-contained Clarity**: Questions and answers should contain sufficient context, clearly understandable independently of external references.
+- **Brevity**: The rewritten question should be as short as is reasonable while still being clear, understandable, self-contained, and unambiguous.
+
+### Permitted Question Types:
+
+- Analytical
+- Application-based
+- Clarification
+- Counterfactual
+- Understanding
+- Conceptual
+- Factual
+- Open-ended
+- False-premise
+- Edge-case
+- Inference
+- Implication
+- Prediction
+
+(You do not need to use every question type, only those naturally fitting the content and instructions.)
+
+## Output Structure
+
+Present your final output strictly adhering the `<output_format>` tags.
+<output_format>
+Question: [ Question Text ]
+</output_format>
+
+## Output
+
+Begin by thoughtfully analyzing the provided context within `<document_analysis>` tags. Then present the resulting formatted question answer pair clearly within `<output_format>` tags.
+
+## Important Notes
+
+- NEVER modify the core element the question is asking about. The knowledge being evaluated shall not change. 
+- Question disambiguation and modification must be grounded in factual information. 
+- Each "thought_process" should reflect careful consideration and reasoning behind your response.
+- Include all relevant disambiguation information in the question. Make the question as long and detailed as required so that the test taker can fully understand what is being asked.
+- NEVER include the answer in the rewritten question.
+- Ensure rigorous adherence to output formatting and generate a single `<output_format>` tag block.
+- Verify that the correct answer is in fact correct and the best version of that answer.
+- Verify that the question and answer are semantically equivalent to the original question and answer.
+
+
+
+<question>{question}</question>
+"""
+

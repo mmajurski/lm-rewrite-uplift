@@ -6,9 +6,9 @@ import numpy as np
 
 score_thres = 5
 
-# ifp = './data-subset-500'
-ifp = './data-post-cutoff'
-fldrs = ['oe-Q235B', 'oe-gpt120b']
+ifp = './data-subset-500-SU'
+# ifp = './data-post-cutoff-SU'
+fldrs = ['oe-Q235B']#, 'oe-gpt120b']
 
 for fldr in fldrs:
     cur_ifp = os.path.join(ifp, fldr)
@@ -41,13 +41,9 @@ for fldr in fldrs:
 
         giveaway_scores = np.asarray([d['reformat_answer_giveaway_score'] for d in data])
         giveaway_orig_scores = np.asarray([d['orig_answer_giveaway_score'] for d in data])
-        answer_sim_scores = np.asarray([d['reformat_answer_similarity_score'] for d in data])
-        question_sim_scores = np.asarray([d['reformat_answer_similarity_score'] for d in data])
         mask1 = giveaway_scores <= giveaway_orig_scores + 1
-        mask2 = answer_sim_scores >= score_thres
-        mask3 = question_sim_scores >= score_thres
-        mask4 = giveaway_orig_scores < score_thres
-        mask = mask1 & mask2 & mask3 & mask4
+        mask2 = giveaway_orig_scores < score_thres
+        mask = mask1 & mask2
 
         data = [d_gpt for i, d_gpt in enumerate(data) if mask[i]]
 
@@ -57,10 +53,10 @@ for fldr in fldrs:
         print(f"filtered reformat_answer_giveaway_score min: {np.min(scores)}")
         print()
 
-        scores = [d['reformat_answer_similarity_score'] for d in data]
-        print(f"filtered reformat_answer_similarity_score mean: {np.mean(scores)}")
-        print(f"filtered reformat_answer_similarity_score max: {np.max(scores)}")
-        print(f"filtered reformat_answer_similarity_score min: {np.min(scores)}")
+        # scores = [d['reformat_answer_similarity_score'] for d in data]
+        # print(f"filtered reformat_answer_similarity_score mean: {np.mean(scores)}")
+        # print(f"filtered reformat_answer_similarity_score max: {np.max(scores)}")
+        # print(f"filtered reformat_answer_similarity_score min: {np.min(scores)}")
 
         print(f"Saving {len(data)} questions to {cur_ofp}")
 

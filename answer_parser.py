@@ -324,6 +324,61 @@ def parse_generated_open(response: str) -> dict:
     return result
 
 
+def parse_question_open(response: str) -> dict:
+    result = {
+        'question': None,
+        'response': response
+    }
+    
+    # Preprocess the response to remove markdown formatting
+    # Replace **text** with text to handle bold formatting
+    cleaned_response = re.sub(r'\*\*([^*]+)\*\*', r'\1', response)
+    # Remove dash prefixes at the beginning of lines
+    cleaned_response = re.sub(r'(?:^|\n)\s*-\s*', r'\n', cleaned_response)
+    # Remove leading whitespace from all lines
+    cleaned_response = re.sub(r'(?:^|\n)\s+', r'\n', cleaned_response)
+    # Remove markdown headings (# ## and ###)
+    cleaned_response = re.sub(r'(?:^|\n)\s*#{1,3}\s+', r'\n', cleaned_response)
+
+    # Extract content between <output_format> and </output_format> tags if present
+    output_format_pattern = r'<output_format>(.*?)</output_format>'
+    output_format_matches = list(re.finditer(output_format_pattern, cleaned_response, re.DOTALL))
+    
+    if output_format_matches:
+        # If output format tags are found, use only the content from the last match
+        cleaned_response = output_format_matches[-1].group(1).strip()
+    
+    
+    # Try to extract the question - now supporting multi-line responses
+    question_patterns = [
+        # Format: Correct Answer: multi-line text
+        r"(?:^|\n)\s*question\s*:?\s*(.+?)(?:\n\s*$|$)",
+        # Also match if the answer is on the next line after the label
+        r"(?:^|\n)\s*question\s*:?\s*((?:.|\n)+?)(?=(?:\n\s*\w+\s*:|$))",
+        # Format: Answer: multi-line text
+        r"(?:^|\n)\s*question\s*:?\s*(.+?)(?:\n\s*$|$)"
+    ]
+
+    
+    for pattern in question_patterns:
+        # Find all matches and take the last one
+        question_matches = list(re.finditer(pattern, cleaned_response, re.DOTALL | re.IGNORECASE))
+        if question_matches:
+            result['question'] = question_matches[-1].group(1).strip()
+            break
+
+    
+    # Final validation
+    if not result['question']:
+        return None
+
+    # Additional validation for
+    if result['question'].strip() == "":
+        return None
+
+    return result
+
+
 def parse_abcd(response: str) -> str:
     """
     Parses an LLM response to extract a single character answer (A, B, C, or D).

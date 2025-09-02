@@ -93,8 +93,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                     model_name = data['eval']['model'].replace("v_llm/", "")
                     dataset_name = data['eval']['task_registry_name']
 
-                    d_fp = data['eval']['task_args']['dataset_fldr']#.replace('mmajursk','mmajurski')
-                    d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajurski','mmajursk')
+                    d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
+                    # d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajurski','mmajursk')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
