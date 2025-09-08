@@ -58,10 +58,9 @@ plot_markers = [
     '.',
 ]
 
-
-for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-500', 'data-subset-500-SU']:
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU']:
     # for generating_model_name in ['gpt120b', 'Q235B']:
-    for generating_model_name in ['Q235B']: #['gpt120b', 'Q235B']:
+    for generating_model_name in ['gpt120b', 'Q235B']:
         main_dir = f'./{dataset_fldr}/'
         # main_dir = './data-post-cutoff/'
         ref_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}-filtered-orig')
@@ -75,6 +74,9 @@ for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-50
             reformat_logs = [fn for fn in os.listdir(reformat_question_folder) if fn.endswith('.json')]
         else:
             reformat_logs = []
+
+        if len(ref_logs) == 0 and len(reformat_logs) == 0:
+            continue
 
 
     
@@ -113,21 +115,25 @@ for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-50
                 
                 samples = data['samples']
                 for q_id, sample in enumerate(samples):
-                    question = sample['input']
                     orig_question = source_dataset[q_id]['orig_question']
-                    reformat_question = source_dataset[q_id]['question']
-                    # reformat_answer = source_dataset[q_id]['answer']
-                    orig_answer = source_dataset[q_id]['orig_answer']
-                    context = source_dataset[q_id]['context']
+                    # reformat_question = source_dataset[q_id]['question']
+                    # # reformat_answer = source_dataset[q_id]['answer']
+                    # orig_answer = source_dataset[q_id]['orig_answer']
+                    # context = source_dataset[q_id]['context']
                     if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
                         acc = sample['scores']['model_graded_qa']['value'] == 'C'
                         if orig_question not in impact_of_reformat[dataset_name]:
                             impact_of_reformat[dataset_name][orig_question] = dict()
-                            impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
-                            impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
-                            impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
+                            # impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
+                            # impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
+                            # impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
+
+                            impact_of_reformat[dataset_name][orig_question]['orig_answer_giveaway_score'] = source_dataset[q_id]['orig_answer_giveaway_score']
+                            impact_of_reformat[dataset_name][orig_question]['reformat_answer_giveaway_score'] = source_dataset[q_id]['reformat_answer_giveaway_score']
+
+                            
                             # impact_of_reformat[dataset_name][orig_question]['reformat_answer'] = reformat_answer
-                            impact_of_reformat[dataset_name][orig_question]['context'] = context
+                            # impact_of_reformat[dataset_name][orig_question]['context'] = context
                             impact_of_reformat[dataset_name][orig_question]['models'] = dict()
                         if model_name not in impact_of_reformat[dataset_name][orig_question]['models']:
                             impact_of_reformat[dataset_name][orig_question]['models'][model_name] = dict()
@@ -137,35 +143,22 @@ for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-50
                             impact_of_reformat[dataset_name][orig_question]['models'][model_name]['reformat_acc'] = acc    
                         
 
-            # impact_of_reformat_copy = copy.deepcopy(impact_of_reformat)
-            # for dataset_name, questions in impact_of_reformat_copy.items():
-            #     questions_to_delete = list()
-            #     for question, sub_data in questions.items():
-            #         to_delete = list()
-            #         models = sub_data['models']
-            #         for model_name, scores in models.items():
-            #             if 'ref_acc' not in scores or 'reformat_acc' not in scores:
-            #                 to_delete.append(model_name)
-            #             else:
-            #                 if scores['ref_acc'] and scores['reformat_acc']:
-            #                     to_delete.append(model_name)
-            #         for model_name in to_delete:
-            #             del impact_of_reformat_copy[dataset_name][question]['models'][model_name]
-            #         if len(impact_of_reformat_copy[dataset_name][question]['models']) == 0:
-            #             questions_to_delete.append(question)
-            #     for question in questions_to_delete:
-            #         del impact_of_reformat_copy[dataset_name][question]
-
-            # with open(f'impact_of_reformat_{generating_model_name}{giveaway_name}-failures.json','w') as f:
-            #     json.dump(impact_of_reformat_copy, f, indent=2)
 
 
         # Compute average acc_uplift per model and dataset
         avg_uplift_per_model_dataset = dict()
+        avg_scores_per_dataset = dict()
 
         for dataset_name, questions in impact_of_reformat.items():
             if dataset_name not in avg_uplift_per_model_dataset:
                 avg_uplift_per_model_dataset[dataset_name] = dict()
+            if dataset_name not in avg_scores_per_dataset:
+                avg_scores_per_dataset[dataset_name] = dict()
+            
+            scores = [questions[k]['orig_answer_giveaway_score'] for k in list(questions.keys())]
+            avg_scores_per_dataset[dataset_name]['orig_answer_giveaway_score'] = np.mean(scores)
+            scores = [questions[k]['reformat_answer_giveaway_score'] for k in list(questions.keys())]
+            avg_scores_per_dataset[dataset_name]['reformat_answer_giveaway_score'] = np.mean(scores)
             
             # Group questions by model to compute averages
             model_scores = dict()
@@ -173,24 +166,21 @@ for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-50
                 models = sub_data['models']
                 for model_name, scores in models.items():
                     if model_name not in model_scores:
-                        model_scores[model_name] = {'uplifts': [], 'ref_accs': [], 'reformat_accs': []}
+                        model_scores[model_name] = {'ref_accs': [], 'reformat_accs': []}
                     if 'ref_acc' in scores and 'reformat_acc' in scores:
-                        model_scores[model_name]['uplifts'].append(float(scores['reformat_acc']) - float(scores['ref_acc']))
                         model_scores[model_name]['ref_accs'].append(scores['ref_acc'])
                         model_scores[model_name]['reformat_accs'].append(scores['reformat_acc'])
             
             # Compute averages for each model
             for model_name, score_lists in model_scores.items():
-                if len(score_lists['uplifts']) > 0:
-                    avg_uplift = sum(score_lists['uplifts']) / len(score_lists['uplifts'])
+                if len(score_lists['ref_accs']) > 0:
                     avg_ref_acc = sum(score_lists['ref_accs']) / len(score_lists['ref_accs'])
                     avg_reformat_acc = sum(score_lists['reformat_accs']) / len(score_lists['reformat_accs'])
                     
                     avg_uplift_per_model_dataset[dataset_name][model_name] = {
-                        'avg_acc_uplift': avg_uplift,
                         'avg_ref_acc': avg_ref_acc,
                         'avg_reformat_acc': avg_reformat_acc,
-                        'num_questions': len(score_lists['uplifts'])
+                        'num_questions': len(score_lists['ref_accs'])
                     }
 
         # # Save the average uplift data
@@ -210,77 +200,88 @@ for dataset_fldr in ['data-subset-500-SU']: #['data-post-cutoff','data-subset-50
         for dataset_name, models in avg_uplift_per_model_dataset.items():
             all_models.update(models.keys())
             all_datasets.add(dataset_name)
-        
 
         all_datasets = list(all_datasets)
         all_datasets.sort()
         all_models = list(all_models)
         all_models.sort()
-        plt.figure(figsize=(8, 8))
+        
 
-        # Create a scatterplot for each model
-        for m_idx, model_name in enumerate(all_models):            
+        for reformat_flag in [True, False]:
+            plt.figure(figsize=(8, 8))
+
+            # Create a scatterplot for each model
+            for m_idx, model_name in enumerate(all_models):
             
-            # Plot data points for each dataset
-            for d_idx, dataset_name in enumerate(all_datasets):
-                if not dataset_name in avg_uplift_per_model_dataset.keys():
-                    continue
-                models = avg_uplift_per_model_dataset[dataset_name]
-
-                if model_name in models:
-                    ref_acc = models[model_name]['avg_ref_acc']
-                    reformat_acc = models[model_name]['avg_reformat_acc']
-                    num_questions = models[model_name]['num_questions']
-                    
-                    marker = plot_markers[d_idx % len(plot_markers)]
-                    color = plot_colors[m_idx % len(plot_colors)]
-                    plt.scatter(ref_acc, reformat_acc, 
-                            marker=marker, color=color, 
-                            s=80, 
-                            alpha=1.0, 
-                            label=f'{dataset_name} (n={num_questions})')
             
-        # Add diagonal line (y=x) representing no change
-        plt.plot([0, 1], [0, 1], 'k--', alpha=0.5)
-        
-        # Add grid and labels
-        # plt.grid(True, alpha=0.3)
-        plt.xlabel('Average Dataset Reference Accuracy')
-        plt.ylabel('Average Dataset Reformat Accuracy')
-        plt.title(f'Average Reference vs Reformat Accuracy')
-        # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        # plt.legend()
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
-        
-        
-        # Make the plot square to maintain aspect ratio
-        plt.axis('equal')
-        ax = plt.gca()
+                # Plot data points for each dataset
+                for d_idx, dataset_name in enumerate(all_datasets):
+                    if not dataset_name in avg_uplift_per_model_dataset.keys():
+                        continue
+                    models = avg_uplift_per_model_dataset[dataset_name]
 
-        all_models = [m.split('/')[1] if '/' in m else m for m in all_models]
+                    if reformat_flag:
+                        giveaway_score = avg_scores_per_dataset[dataset_name]['reformat_answer_giveaway_score']
+                    else:
+                        giveaway_score = avg_scores_per_dataset[dataset_name]['orig_answer_giveaway_score']
 
-        # Create legend for colors (datasets)
-        handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
-        labels_color = [f"{m}" for m in all_models]
-        legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='x-small')  #x-small
+                    if model_name in models:
+                        if reformat_flag:
+                            acc = models[model_name]['avg_reformat_acc']
+                        else:
+                            acc = models[model_name]['avg_ref_acc']
+                        num_questions = models[model_name]['num_questions']
+                        
+                        marker = plot_markers[d_idx % len(plot_markers)]
+                        color = plot_colors[m_idx % len(plot_colors)]
+                        plt.scatter(acc, giveaway_score, 
+                                marker=marker, color=color, 
+                                s=80, 
+                                alpha=1.0, 
+                                label=f'{dataset_name} (n={num_questions})')
+                
+                
+            # Add grid and labels
+            plt.grid(True, alpha=0.3)
+            if reformat_flag:
+                plt.xlabel('Average Dataset Reformat Accuracy')
+                plt.ylabel('Average Dataset Reformat Answer Giveaway')
+            else:
+                plt.xlabel('Average Dataset Reference Accuracy')
+                plt.ylabel('Average Dataset Reference Answer Giveaway')
+            plt.title(f'Answer Giveaway vs Accuracy')
+            plt.xlim(0, 1)
+            plt.ylim(0, 1)
+            
+            
+            # Make the plot square to maintain aspect ratio
+            plt.axis('equal')
+            ax = plt.gca()
 
-        # Create legend for markers (models)
-        handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
-        labels_marker = [f"{d}" for d in all_datasets]
-        legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower right", fontsize='x-small') # x-small
+            all_models_labels = [m.split('/')[1] if '/' in m else m for m in all_models]
 
-        # Add both legends
-        ax.add_artist(legend1)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        
-        # Save the plot
-        os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
-        plt.savefig(f'./imgs/{dataset_fldr}/{generating_model_name}.svg', dpi=300, bbox_inches='tight')
-        plt.close()
+            # Create legend for colors (datasets)
+            handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models_labels)]
+            labels_color = [f"{m}" for m in all_models_labels]
+            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='x-small')  #x-small
 
-        print(f"Scatterplots saved for {len(all_models)} models")
+            # Create legend for markers (models)
+            handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
+            labels_marker = [f"{d}" for d in all_datasets]
+            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower right", fontsize='x-small') # x-small
+
+            # Add both legends
+            ax.add_artist(legend1)
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            
+            # Save the plot
+            os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
+            post_script = 'reformat' if reformat_flag else 'orig'
+            plt.savefig(f'./imgs/{dataset_fldr}/answer_giveaway_{generating_model_name}_{post_script}.svg', dpi=300, bbox_inches='tight')
+            plt.close()
+
+            print(f"Scatterplots saved for {len(all_models)} models")
 
 
 

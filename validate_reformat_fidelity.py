@@ -42,12 +42,6 @@ def compute_scores(dataset_fp, remote, model, force=False):
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
 
-    total_input_tokens = sum([res['input_tokens'] for res in results])
-    total_output_tokens = sum([res['output_tokens'] for res in results])
-    total_tokens = sum([res['total_tokens'] for res in results])
-    print(f"total input tokens: {total_input_tokens}")
-    print(f"total output tokens: {total_output_tokens}")
-    print(f"total tokens: {total_tokens}")
 
     for i in range(len(results)):
         res = results[i]
@@ -144,10 +138,10 @@ if __name__ == '__main__':
     # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
 
 
-    for model_name in ['gpt120b','Q235B']:
-        ifp = f'./data-subset-500/oe-{model_name}/'
-        print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
-        validate_reformat_fidelity(ifp, remote, model)
+    # for model_name in ['gpt120b','Q235B']:
+    #     ifp = f'./data-subset-500/oe-{model_name}/'
+    #     print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
+    #     validate_reformat_fidelity(ifp, remote, model)
 
 
     for model_name in ['gpt120b','Q235B']:

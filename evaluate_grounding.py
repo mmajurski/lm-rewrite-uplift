@@ -28,14 +28,10 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
     for d in dataset:
         if k1 not in d or d[k1] is None:
             any_missing = True
-    if not any_missing:
-        return
     k1 = f'{get_key_prefix(reformat)}question_groundedness_score'
     for d in dataset:
         if k1 not in d or d[k1] is None:
             any_missing = True
-    if not any_missing:
-        return
     k1 = f'{get_key_prefix(reformat)}question_clarity_score'
     for d in dataset:
         if k1 not in d or d[k1] is None:
@@ -181,5 +177,12 @@ if __name__ == '__main__':
     evaluate_dataset_relevance_features(ifp, False, remote, model)
 
     ifp = './data-post-cutoff/oe-Q235B-filtered/'
+    evaluate_dataset_relevance_features(ifp, True, remote, model)
+    evaluate_dataset_relevance_features(ifp, False, remote, model)
+
+    
+
+
+    ifp = './data-subset-500-SU/oe-Q235B-filtered/'
     evaluate_dataset_relevance_features(ifp, True, remote, model)
     evaluate_dataset_relevance_features(ifp, False, remote, model)

@@ -51,15 +51,6 @@ def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_eff
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
 
-    total_input_tokens = sum([res['input_tokens'] for res in results])
-    total_output_tokens = sum([res['output_tokens'] for res in results])
-    total_tokens = sum([res['total_tokens'] for res in results])
-    print(f"total input tokens: {total_input_tokens}")
-    print(f"total output tokens: {total_output_tokens}")
-    print(f"total tokens: {total_tokens}")
-    print(f"total toks/sec: {total_tokens / total_time}")
-    print(f"total output toks/sec: {total_output_tokens / total_time}")
-
     failed_responses = list()
     for i in range(len(results)):
         res = results[i]

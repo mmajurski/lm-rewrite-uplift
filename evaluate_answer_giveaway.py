@@ -134,17 +134,17 @@ if __name__ == '__main__':
     #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
 
 
-    # for model_name in ['gpt120b','Q235B']:
-    #     ifp = f'./data-post-cutoff/oe-{model_name}/'
-    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
-    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
-    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
-    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
-
-
-    for model_name in ['Q235B']:
-        ifp = f'./data-subset-500-SU/oe-{model_name}/'
+    for model_name in ['gpt120b','Q235B']:
+        ifp = f'./data-post-cutoff/oe-{model_name}/'
         print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
         evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
         print(f"Evaluating answer giveaway features for {model} on the original questions")
         evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
+
+
+    # for model_name in ['Q235B']:
+    #     ifp = f'./data-subset-500-SU/oe-{model_name}/'
+    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=True)
+    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
+    #     evaluate_dataset_answer_giveaway_features(ifp, remote, model, reformat=False)
