@@ -2,7 +2,7 @@ import os
 import httpx
 import openai
 import asyncio
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 import time
 from openai.types.responses import ResponseOutputMessage, ResponseReasoningItem
 
@@ -66,11 +66,12 @@ def translate_remote(remote:str) -> tuple[str, str]:
 
 
 class SglModelAsync:
-    def __init__(self, model:str, remote:str, reasoning_effort:str='medium', connection_parallelism:int=64):
+    def __init__(self, model:str, remote:str, reasoning_effort:str='medium', connection_parallelism:int=64, chat_completion_api:bool=False):
         self.model = model
         self.remote = remote
         self.url, self.api_key = translate_remote(remote)
         self.reasoning_effort = reasoning_effort
+        self.chat_completion_api = chat_completion_api
         print(f"SglModelAsync selected reasoning_effort: {reasoning_effort}")
 
         self.connection_parallelism = connection_parallelism
@@ -80,8 +81,37 @@ class SglModelAsync:
 
         print(f"Using model: {self.model} on remote: {self.remote} at {self.url}")
 
-        # self.test_connection()
 
+        # client = openai.OpenAI(
+        #     base_url=self.url, 
+        #     api_key=self.api_key,
+        #     http_client=httpx.Client(verify=False, timeout=30.0)
+        # )
+        # response = client.responses.create(
+        #                 model=model,
+        #                 instructions="Reply with a whitty limerick",
+        #                 input="Who is the president of the United States?",
+        #                 max_output_tokens=1024, 
+        #                 temperature=0.7,
+        #                 stream=False,
+        #                 reasoning={'effort': reasoning_effort},
+        #             )
+        # response = client.chat.completions.create(
+        #     model=model,
+        #     messages=[
+        #         {"role": "system", "content": "Reply with a witty limerick"},
+        #         {"role": "user", "content": "Who is the president of the United States?"},
+        #     ],
+        #     max_tokens=1024,
+        #     temperature=0.7,
+        #     stream=False,
+        #     extra_body={"reasoning": {"effort": reasoning_effort}},
+        # )
+        # print(response)
+        # exit(1)
+
+
+        
         self.client = openai.AsyncOpenAI(
             base_url=self.url, 
             api_key=self.api_key,
@@ -89,7 +119,7 @@ class SglModelAsync:
         )
         
     @staticmethod
-    async def generate_text_async(model, client, prompt, request_id, reasoning_effort='medium'):
+    async def generate_text_async(model, client, prompt, request_id, reasoning_effort='medium', chat_completion_api=False):
         start_time = time.time()
         try:
             
@@ -105,15 +135,29 @@ class SglModelAsync:
             retry_limit = 10
             while retry_count < retry_limit:
                 try:
-                    response = await client.responses.create(
-                        model=model,
-                        instructions=instructions,
-                        input=prompt,
-                        max_output_tokens=32000, 
-                        temperature=0.7,
-                        stream=False,
-                        reasoning={'effort': reasoning_effort},
-                    )
+                    if chat_completion_api:
+                        response = await client.chat.completions.create(
+                            model=model,
+                            messages=[
+                                {"role": "system", "content": instructions},
+                                {"role": "user", "content": prompt},
+                            ],
+                            max_tokens=64000,
+                            temperature=0.7,
+                            stream=False,
+                            reasoning_effort=reasoning_effort
+                        )
+                    else:
+                        response = await client.responses.create(
+                            model=model,
+                            instructions=instructions,
+                            input=prompt,
+                            max_output_tokens=64000, 
+                            temperature=0.7,
+                            stream=False,
+                            reasoning={'effort': reasoning_effort},
+                        )
+                    
                     if retry_count > 0:
                         print(f"Model took {retry_count} retries, but succeeded")
                     break
@@ -130,11 +174,16 @@ class SglModelAsync:
             
             content = ""
             scratchpad = ""
-            for c in response.output:
-                if isinstance(c, ResponseOutputMessage):
-                    content = c.content[0].text
-                if isinstance(c, ResponseReasoningItem):
-                    scratchpad = c.content[0].text
+            if chat_completion_api:
+                content = response.choices[0].message.content
+                if 'reasoning_content' in response.choices[0].message.model_extra:
+                    scratchpad = response.choices[0].message.model_extra['reasoning_content']
+            else:
+                for c in response.output:
+                    if isinstance(c, ResponseOutputMessage):
+                        content = c.content[0].text
+                    if isinstance(c, ResponseReasoningItem):
+                        scratchpad = c.content[0].text
 
             
             result = {
@@ -177,7 +226,7 @@ class SglModelAsync:
             
             # Create tasks for this batch with the shared client
             batch_tasks = [
-                self.generate_text_async(self.model, self.client, prompt, i+j, self.reasoning_effort) 
+                self.generate_text_async(self.model, self.client, prompt, i+j, self.reasoning_effort, self.chat_completion_api) 
                 for j, prompt in enumerate(batch_prompts)
             ]
 
