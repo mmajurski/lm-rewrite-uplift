@@ -499,3 +499,27 @@ def parse_number(response: str, valid_options: list = None) -> int:
             return num
                 
     return None
+
+
+
+
+def parse_generated_context(response: str) -> dict:
+    result = {
+        'context': None
+    }
+    
+    # Preprocess the response to remove markdown formatting
+    # Replace **text** with text to handle bold formatting
+    cleaned_response = re.sub(r'\*\*([^*]+)\*\*', r'\1', response)
+    
+    # Extract content between <output_format> and </output_format> tags if present
+    output_format_pattern = r'<output_format>(.*?)</output_format>'
+    output_format_matches = list(re.finditer(output_format_pattern, cleaned_response, re.DOTALL))
+    
+    if output_format_matches:
+        # If output format tags are found, use only the content from the last match
+        cleaned_response = output_format_matches[-1].group(1).strip()
+
+    result['context'] = cleaned_response
+
+    return result

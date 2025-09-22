@@ -7,8 +7,12 @@ import numpy as np
 score_thres = 5
 
 # ifp = './data-subset-500'
-ifp = './data-post-cutoff'
-fldrs = ['oe-Q235B', 'oe-gpt120b']
+# ifp = './data-post-cutoff'
+# ifp = './data-subset-500-SU2'
+ifp = './data-subset-500-afc'
+# ifp = './data-post-cutoff-afc'
+# fldrs = ['oe-Q235B', 'oe-gpt120b']
+fldrs = ['oe-gpt120b-afc']
 
 for fldr in fldrs:
     cur_ifp = os.path.join(ifp, fldr)

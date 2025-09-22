@@ -34,7 +34,8 @@ def compute_scores(dataset_fp, remote, model, force=False):
     print("Dataset has %d contexts" % len(dataset))
 
     # build the prompts
-    model_prompts = [prompts.REFORMAT_VALIDATION_PROMPT.format(context=d.get('context', ''), question1=d['orig_question'], answer1=d['orig_answer'], question2=d['question'], answer2=d['answer']) for d in dataset]
+    # model_prompts = [prompts.REFORMAT_VALIDATION_PROMPT.format(context=d.get('context', ''), question1=d['orig_question'], answer1=d['orig_answer'], question2=d['question'], answer2=d['answer']) for d in dataset]
+    model_prompts = [prompts.REFORMAT_VALIDATION_PROMPT.format(context=d.get('context', ''), question1=d['orig_question'], answer1=d['orig_answer'], question2=d['reformat_question'], answer2=d['reformat_answer']) for d in dataset]
     
 
     model = SglModelAsync(remote=remote, model=model, reasoning_effort='high')
@@ -42,6 +43,9 @@ def compute_scores(dataset_fp, remote, model, force=False):
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
 
+    # reload the dataset to grab any potential changes to the dataset
+    with open(dataset_fp, 'r') as f:
+        dataset = json.load(f)
 
     for i in range(len(results)):
         res = results[i]
@@ -65,6 +69,8 @@ def compute_scores(dataset_fp, remote, model, force=False):
     print(f"Average reformat answer similarity score: {np.mean(scores)}")
 
     print(f"Saving {len(dataset)} questions to {dataset_fp}")
+    
+
     with open(dataset_fp, 'w') as f:
         json.dump(dataset, f, indent=2)
     return
@@ -112,27 +118,27 @@ def validate_reformat_fidelity(ifp, remote:str, model:str):
         avg_answer_similarity_score[fn] = np.mean([d['reformat_answer_similarity_score'] for d in data])
         failed_entries = [d for d in data if d.get('reformat_answer_similarity_score') < 5 or d.get('reformat_question_similarity_score') < 5]
 
-        if len(failed_entries) > 0:
-            print(f"Dataset: {os.path.basename(fn)}")
-            print(f"  Average reformat question similarity score: {avg_question_similarity_score[fn]:.4f}")
-            print(f"  Average reformat answer similarity score: {avg_answer_similarity_score[fn]:.4f}")
-            print(f"  Number of answer preservation failures: {len(failed_entries)}/{len(data)}")
-            for d in failed_entries:
-                print(f"    Orig Question: {d['orig_question']}")
-                print(f"    Reformat Question: {d['question']}")
-                print(f"    Reformat Question Similarity: {d.get('reformat_question_similarity_score', 'missing')}")
-                print(f"    Orig Answer: {d.get('orig_answer', 'missing')}")
-                print(f"    Reformat Answer: {d.get('answer', 'missing')}")
-                print(f"    Reformat Answer Similarity: {d.get('reformat_answer_similarity_score', 'missing')}")
-                print()
-            print()
+        # if len(failed_entries) > 0:
+        #     print(f"Dataset: {os.path.basename(fn)}")
+        #     print(f"  Average reformat question similarity score: {avg_question_similarity_score[fn]:.4f}")
+        #     print(f"  Average reformat answer similarity score: {avg_answer_similarity_score[fn]:.4f}")
+        #     print(f"  Number of answer preservation failures: {len(failed_entries)}/{len(data)}")
+        #     for d in failed_entries:
+        #         print(f"    Orig Question: {d['orig_question']}")
+        #         print(f"    Reformat Question: {d['reformat_question']}")
+        #         print(f"    Reformat Question Similarity: {d.get('reformat_question_similarity_score', 'missing')}")
+        #         print(f"    Orig Answer: {d.get('orig_answer', 'missing')}")
+        #         print(f"    Reformat Answer: {d.get('reformat_answer', 'missing')}")
+        #         print(f"    Reformat Answer Similarity: {d.get('reformat_answer_similarity_score', 'missing')}")
+        #         print()
+        #     print()
 
 
 
 
 
 if __name__ == '__main__':
-    remote = 'pn131285:8447'
+    remote = 'pn131285:8443'
     model = 'gpt-oss-120b'
     # remote = 'pn131285:8446'
     # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
@@ -144,11 +150,19 @@ if __name__ == '__main__':
     #     validate_reformat_fidelity(ifp, remote, model)
 
 
-    for model_name in ['gpt120b','Q235B']:
-        ifp = f'./data-post-cutoff/oe-{model_name}/'
+    # for model_name in ['gpt120b','Q235B']:
+    #     ifp = f'./data-post-cutoff/oe-{model_name}/'
+    #     print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
+    #     validate_reformat_fidelity(ifp, remote, model)
+
+    for model_name in ['gpt120b']:
+        ifp = f'./data-subset-500-afc/oe-{model_name}-afc/'
         print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
         validate_reformat_fidelity(ifp, remote, model)
 
+        ifp = f'./data-post-cutoff-afc/oe-{model_name}-afc/'
+        print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
+        validate_reformat_fidelity(ifp, remote, model)
 
 
 

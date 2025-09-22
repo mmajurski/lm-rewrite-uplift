@@ -71,29 +71,157 @@ import answer_parser
 #     if model_name == 'v_llm/Llama-4-Maverick-17B-128E-Instruct-FP8':
 #         os.remove(fn)
     
-fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan.json'
-with open(fn, 'r') as f:
-    data = json.load(f)
+# fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan.json'
+# with open(fn, 'r') as f:
+#     data = json.load(f)
 
-for sample in data:
-    keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
-    for key in list(sample.keys()):
-        if key not in keys_to_keep:
-            del sample[key]
+# for sample in data:
+#     keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
+#     for key in list(sample.keys()):
+#         if key not in keys_to_keep:
+#             del sample[key]
 
-with open('ai_plan-debug.json', 'w') as f:
-    json.dump(data, f, indent=2)
+# with open('ai_plan-debug.json', 'w') as f:
+#     json.dump(data, f, indent=2)
 
 
-fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan_yb.json'
-with open(fn, 'r') as f:
-    data = json.load(f)
+# fn = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff/oe-gpt120b-filtered/ai_plan_yb.json'
+# with open(fn, 'r') as f:
+#     data = json.load(f)
 
-for sample in data:
-    keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
-    for key in list(sample.keys()):
-        if key not in keys_to_keep:
-            del sample[key]
+# for sample in data:
+#     keys_to_keep = {'question', 'answer', 'orig_question', 'orig_answer'}
+#     for key in list(sample.keys()):
+#         if key not in keys_to_keep:
+#             del sample[key]
 
-with open('ai_plan_yb-debug.json', 'w') as f:
-    json.dump(data, f, indent=2)
+# with open('ai_plan_yb-debug.json', 'w') as f:
+#     json.dump(data, f, indent=2)
+
+
+
+
+
+
+
+
+# ifp = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-SU/logs-oe-gpt120b-filtered-reformat'
+# fns = [fn for fn in os.listdir(ifp) if fn.endswith('.json')]
+# fns.sort()
+
+# for fn in fns:
+#     fn = os.path.join(ifp, fn)
+#     with open(fn, 'r') as f:
+#         data = json.load(f)
+
+#     data['eval']['task_args']['dataset_fldr'] = data['eval']['task_args']['dataset_fldr'].replace('data-subset-500-SU2', 'data-subset-500-SU')
+#     data['eval']['task_args']['dataset_fldr'] = data['eval']['task_args']['dataset_fldr'].replace('mmajurski', 'mmajursk')
+
+#     # Overwrite the JSON file to reflect the new fields (i.e., save the updated data)
+#     with open(fn, 'w') as f:
+#         json.dump(data, f, indent=2)
+
+
+
+
+
+
+
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-SU'
+# # data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff'
+# fldrs = [fn for fn in os.listdir(data_dir) if fn.startswith('logs-')]
+# fldrs.sort()
+
+# for fldr in fldrs:
+#     ifp = os.path.join(data_dir, fldr)
+#     to_delete = []
+
+#     fns = [fn for fn in os.listdir(ifp) if fn.endswith('.json')]
+#     fns.sort()
+
+#     for fn in fns:
+#         fn = os.path.join(ifp, fn)
+#         with open(fn, 'r') as f:
+#             data = json.load(f)
+
+#         if 'gemma-3-270m' in data['eval']['model']:
+#             to_delete.append(fn)
+#         if 'Qwen3-0.6B' in data['eval']['model']:
+#             to_delete.append(fn)
+
+#     for fn in to_delete:
+#         os.remove(os.path.join(ifp, fn))
+
+#     print(f"Deleted {len(to_delete)} files from {ifp}")
+
+
+
+
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500'
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-afc'
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff'
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff-afc'
+data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-SU'
+fldrs = ['oe-gpt120b', 'oe-gpt120b-filtered'] # ['oe-gpt120b', 'oe-gpt120b-filtered', 'oe-Q235B', 'oe-Q235B-filtered']
+
+for fldr in fldrs:
+    ifp = os.path.join(data_dir, fldr)
+    
+    fns = [fn for fn in os.listdir(ifp) if fn.endswith('.json')]
+    fns.sort()
+
+    for fn in fns:
+        fn = os.path.join(ifp, fn)
+        
+        with open(fn, 'r') as f:
+            data = json.load(f)
+
+        if 'reformat_question' in data[0]:
+            continue
+        print(f"Processing {fn}")
+
+        for i in range(len(data)):
+            del_keys = ['reformat_response','reformat_scratchpad', 'explanation', 'reformat_answer_giveaway_response', 'reformat_answer_giveaway_scratchpad', 'orig_answer_giveaway_response', 'orig_answer_giveaway_scratchpad']
+            del_keys.extend(['reformat_answer_giveaway_score', 'reformat_question_similarity_score', 'reformat_answer_similarity_score'])
+            for k in list(data[i].keys()):
+                if '_embeddings' in k:
+                    del_keys.append(k)
+            for key in del_keys:
+                if key in data[i]:
+                    del data[i][key]
+            if 'answer' not in data[i]:
+                data[i]['answer'] = data[i]['orig_answer']
+            data[i]['reformat_question'] = data[i]['question']
+            data[i]['reformat_answer'] = data[i]['answer']
+            # del data[i]['afc_question']
+            # del data[i]['afc_answer']
+            del data[i]['question']
+            del data[i]['answer']
+
+            # data[i]['context'] = data[i]['context_no_answer']
+            # del data[i]['context_no_answer']
+
+
+            key_order = ['context', 'orig_question', 'orig_answer', 'reformat_question', 'reformat_answer', 'reformat_question', 'reformat_answer']
+            # Build new ordered dict
+            new_d = {}
+            for k in key_order:
+                if k in data[i]:
+                    new_d[k] = data[i][k]
+            # Add remaining keys not in key_order
+            for k in data[i]:
+                if k not in key_order:
+                    new_d[k] = data[i][k]
+            data[i] = new_d
+        
+
+        with open(fn, 'w') as f:
+            json.dump(data, f, indent=2)
+
+
+
+
+
+
+
+

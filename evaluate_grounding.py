@@ -45,7 +45,7 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
 
     # build the prompts
     if reformat:
-        model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['question'], answer=d['orig_answer']) for d in dataset]
+        model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['reformat_question'], answer=d['orig_answer']) for d in dataset]
     else:
         model_prompts = [prompts.META_PROPERTIES_PROMPT.format(context=d.get('context', ''), question=d['orig_question'], answer=d['orig_answer']) for d in dataset]
 
@@ -83,7 +83,7 @@ def compute_meta_scores(dataset_fp, remote, model, reformat=False):
 
 
 
-def evaluate_dataset_relevance_features(ifp, reformat:bool, remote: str, model: str):
+def evaluate_dataset_relevance_features(ifp, remote: str, model: str, reformat:bool):
 
     fns = []
     for fn in os.listdir(ifp):
@@ -160,29 +160,32 @@ if __name__ == '__main__':
     # evaluate_dataset_relevance_features(ifp, True, remote, model)
     # evaluate_dataset_relevance_features(ifp, False, remote, model)
 
-    remote = 'pn131285:8447'
+    remote = 'pn131285:8443'
     model = 'gpt-oss-120b'
 
-    ifp = './data-subset-500/oe-gpt120b-filtered/'
-    evaluate_dataset_relevance_features(ifp, True, remote, model)
-    evaluate_dataset_relevance_features(ifp, False, remote, model)
+    # for model_name in ['gpt120b', 'Q235B']:
+    #     ifp = f'./data-subset-500-full-context/oe-{model_name}-filtered/'
+    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    #     evaluate_dataset_relevance_features(ifp, remote, model, reformat=True)
+    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
+    #     evaluate_dataset_relevance_features(ifp, remote, model, reformat=False)
 
-    ifp = './data-subset-500/oe-Q235B-filtered/'
-    evaluate_dataset_relevance_features(ifp, True, remote, model)
-    evaluate_dataset_relevance_features(ifp, False, remote, model)
+    #     ifp = f'./data-post-cutoff-full-context/oe-{model_name}-filtered/'
+    #     print(f"Evaluating answer giveaway features for {model} on the reformatted questions")
+    #     evaluate_dataset_relevance_features(ifp, remote, model, reformat=True)
+    #     print(f"Evaluating answer giveaway features for {model} on the original questions")
+    #     evaluate_dataset_relevance_features(ifp, remote, model, reformat=False)
 
+    for model_name in ['gpt120b']:
+        ifp = f'./data-subset-500-afc/oe-{model_name}-afc/'
+        print(f"Evaluating answer features for {model} on the reformatted questions")
 
-    ifp = './data-post-cutoff/oe-gpt120b-filtered/'
-    evaluate_dataset_relevance_features(ifp, True, remote, model)
-    evaluate_dataset_relevance_features(ifp, False, remote, model)
+        evaluate_dataset_relevance_features(ifp, remote, model, reformat=True)
+        print(f"Evaluating answer features for {model} on the original questions")
+        evaluate_dataset_relevance_features(ifp, remote, model, reformat=False)
 
-    ifp = './data-post-cutoff/oe-Q235B-filtered/'
-    evaluate_dataset_relevance_features(ifp, True, remote, model)
-    evaluate_dataset_relevance_features(ifp, False, remote, model)
-
-    
-
-
-    ifp = './data-subset-500-SU/oe-Q235B-filtered/'
-    evaluate_dataset_relevance_features(ifp, True, remote, model)
-    evaluate_dataset_relevance_features(ifp, False, remote, model)
+        ifp = f'./data-post-cutoff-afc/oe-{model_name}-afc/'
+        print(f"Evaluating answer features for {model} on the reformatted questions")
+        evaluate_dataset_relevance_features(ifp, remote, model, reformat=True)
+        print(f"Evaluating answer features for {model} on the original questions")
+        evaluate_dataset_relevance_features(ifp, remote, model, reformat=False)

@@ -234,12 +234,11 @@ if __name__ == '__main__':
 
 
     models_dict = dict()
-
     
     models_dict['gpt-oss-120b'] = get_model(model="v_llm/gpt-oss-120b", base_url="https://pn131285.nist.gov:8447/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['openai/gpt-oss-20b'] = get_model(model="v_llm/openai/gpt-oss-20b", base_url="https://iarpa018.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['openai/gpt-oss-20b'] = get_model(model="v_llm/openai/gpt-oss-20b", base_url="https://iarpa018.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
-    models_dict['google/gemma-3-270m-it'] = get_model(model="v_llm/google/gemma-3-270m-it", base_url="https://pn120393.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    
     models_dict['google/gemma-3-1b-it'] = get_model(model="v_llm/google/gemma-3-1b-it", base_url="https://pn120393.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     models_dict['google/gemma-3-4b-it'] = get_model(model="v_llm/google/gemma-3-4b-it", base_url="https://pn120393.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     models_dict['google/gemma-3-12b-it'] = get_model(model="v_llm/google/gemma-3-12b-it", base_url="https://pn120393.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
@@ -249,7 +248,6 @@ if __name__ == '__main__':
     models_dict['meta-llama/Llama-3.1-8B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.1-8B-Instruct", base_url="https://pn125915.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
         
     models_dict['microsoft/phi-4'] = get_model(model="v_llm/microsoft/phi-4", base_url="https://pn125916.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['Qwen/Qwen3-0.6B'] = get_model(model="v_llm/Qwen/Qwen3-0.6B", base_url="https://pn125916.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     models_dict['Qwen/Qwen3-1.7B'] = get_model(model="v_llm/Qwen/Qwen3-1.7B", base_url="https://pn125916.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     models_dict['Qwen/Qwen3-4B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-4B-Instruct-2507", base_url="https://pn125916.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     
@@ -258,7 +256,7 @@ if __name__ == '__main__':
     models_dict['Qwen/Qwen3-30B-A3B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-30B-A3B-Instruct-2507", base_url="https://iarpa017.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     
 
-    models_dict['Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'] = get_model(model="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8", base_url="https://pn131285.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'] = get_model(model="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8", base_url="https://pn131285.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     
 
 
@@ -269,7 +267,7 @@ if __name__ == '__main__':
 
 
 
-    base_dir = './data-subset-500-SU'
+    base_dir = './data-subset-500-SU2'
     # base_dir = './data-post-cutoff'
     # base_dir = args.base_dir
     # ds = 'oe-Q235B'
@@ -281,7 +279,7 @@ if __name__ == '__main__':
 
     available_models = list(models_dict.keys())
 
-    for ds in ['oe-Q235B-filtered']: #, 'oe-gpt120b-filtered']:
+    for ds in ['oe-Q235B-filtered', 'oe-gpt120b-filtered']: #, 'oe-gpt120b-filtered']:
         dataset_fldr = f"{base_dir}/{ds}"
         if not os.path.exists(dataset_fldr):
             continue

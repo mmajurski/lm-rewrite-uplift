@@ -8,7 +8,6 @@ import json
 
 plot_colors = [
     '#1f77b4',  # blue
-    # '#ff7f0e',  # orange
     '#ffa655',  # orange
     '#2ca02c',  # green
     '#d62728',  # red
@@ -19,7 +18,6 @@ plot_colors = [
     '#bcbd22',  # olive
     '#17becf',  # cyan
     '#aec7e8',  # light blue
-    # '#ffbb78',  # light orange
     '#ff7f0e',  # orange
     '#98df8a',  # light green
     '#ff9896',  # light red
@@ -28,7 +26,22 @@ plot_colors = [
     '#f7b6d2',  # light pink
     '#c7c7c7',  # light gray
     '#dbdb8d',  # light olive
-    '#9edae5'   # light cyan
+    '#9edae5',  # light cyan
+    # Additional colors
+    '#393b79',  # dark blue
+    '#637939',  # dark green
+    '#8c6d31',  # dark brown
+    '#843c39',  # dark red
+    '#7b4173',  # dark purple
+    '#17becf',  # cyan (repeat for more variety)
+    '#bc80bd',  # lavender
+    '#ffed6f',  # yellow
+    '#1b9e77',  # teal
+    '#e7298a',  # magenta
+    '#66a61e',  # olive green
+    '#e6ab02',  # mustard
+    '#a6761d',  # brown
+    '#666666',  # dark gray
 ]
 
 plot_markers = [
@@ -50,14 +63,22 @@ plot_markers = [
     '.',
 ]
 
-for dataset_fldr in ['data-post-cutoff','data-subset-500']:
+# ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']:
     for question_source in ['orig', 'reformat']:
-        # for generating_model_name in ['gpt120b', 'Q235B']:
         for generating_model_name in ['gpt120b', 'Q235B']:
+            
             main_dir = f'./{dataset_fldr}/'
-            # main_dir = './data-post-cutoff/'
-            question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}-filtered-{question_source}')
-            giveaway_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}-filtered-{question_source}-giveaway')
+
+            if dataset_fldr.endswith('-afc'):
+                context_type = 'afc'
+                context_str = '-afc'
+            else:
+                context_type = 'orig'
+                context_str = ""
+            
+            question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-{question_source}')
+            giveaway_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-{question_source}-giveaway')
 
             if os.path.exists(question_folder):
                 ref_logs = [fn for fn in os.listdir(question_folder) if fn.endswith('.json')]
@@ -91,10 +112,10 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                         data = json.load(f)
                     
                     model_name = data['eval']['model'].replace("v_llm/", "")
+                    model_name = model_name.split('/')[1] if '/' in model_name else model_name
                     dataset_name = data['eval']['task_registry_name']
 
-                    d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajursk','mmajurski')
-                    # d_fp = data['eval']['task_args']['dataset_fldr'].replace('mmajurski','mmajursk')
+                    d_fp = data['eval']['task_args']['dataset_fldr']
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -105,8 +126,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                     for q_id, sample in enumerate(samples):
                         # question = sample['input']
                         orig_question = source_dataset[q_id]['orig_question']
-                        reformat_question = source_dataset[q_id]['question']
-                        reformat_answer = source_dataset[q_id]['answer']
+                        reformat_question = source_dataset[q_id]['reformat_question']
+                        reformat_answer = source_dataset[q_id]['reformat_answer']
                         orig_answer = source_dataset[q_id]['orig_answer']
                         context = source_dataset[q_id]['context']
                         if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
@@ -176,6 +197,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
             all_models = list(all_models)
             all_models.sort()
             plt.figure(figsize=(8, 8))
+            figure_has_content = False
 
             # Create a scatterplot for each model
             for m_idx, model_name in enumerate(all_models):            
@@ -184,7 +206,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                 for d_idx, dataset_name in enumerate(all_datasets):
                     if not dataset_name in avg_uplift_per_model_dataset.keys():
                         continue
-                    models = avg_uplift_per_model_dataset[dataset_name]
+                    models = avg_uplift_per_model_dataset[dataset_name]                    
 
                     if model_name in models:
                         ref_acc = models[model_name]['avg_ref_acc']
@@ -198,6 +220,10 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500']:
                                 s=80, 
                                 alpha=1.0, 
                                 label=f'{dataset_name} (n={num_questions})')
+                    figure_has_content = True
+
+            if not figure_has_content:
+                continue
                 
             # Add diagonal line (y=x) representing no change
             plt.plot([0, 1], [0, 1], 'k--', alpha=0.5)

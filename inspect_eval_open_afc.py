@@ -33,7 +33,7 @@ load_dotenv()
 # GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
 GRADER_MODEL="v_llm/gpt-oss-120b"
-GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8447/v1"
+GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8443/v1"
 GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
 # GRADER_MODEL="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
@@ -75,7 +75,7 @@ Answer the following open ended short answer question. The last line of your res
 
 def base_task(lcl_fp, question_key):
 
-    config = GenerateConfig(max_connections=64, timeout=300)
+    config = GenerateConfig(max_connections=32, timeout=300)
     model = get_model(model=GRADER_MODEL, base_url=GRADER_MODEL_BASE_URL, config=config, api_key=GRADER_MODEL_API_KEY)
 
     
@@ -85,7 +85,8 @@ def base_task(lcl_fp, question_key):
     # random.shuffle(ds)
     samples = list()
     for row in ds:
-        samples.append(Sample(input=row[question_key], target=str(row['orig_answer'])))
+
+        samples.append(Sample(input=str(row[question_key]), target=str(row['orig_answer'])))
     
     return Task(
         dataset = samples,
@@ -146,6 +147,7 @@ def squadv2(dataset_fldr, question_key):
 def triva_qa(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
+
 @task
 def ai_plan(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
@@ -159,11 +161,11 @@ def arXiv_2502_17521v1(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 @task
-def arXiv_2502_17521v1_yb(dataset_fldr, question_key):
+def hle(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 @task
-def hle(dataset_fldr, question_key):
+def arXiv_2502_17521v1_yb(dataset_fldr, question_key):
     return base_task(dataset_fldr, question_key)
 
 
@@ -213,61 +215,68 @@ def get_task(name: str, dataset_fldr: str, question_key: str):
 
 
 
+
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Evaluates a MMLU style dataset using Inspect framework.')
     # parser.add_argument('--model', type=str, default='meta-llama/Llama-3.2-3B-Instruct')
     # parser.add_argument('--test_path', type=str, default='./data/squad_reformat_open', help='Path to the test dataset, specifically the folder containing the json dataset files.')
-    parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--question_key', type=str, required=True)  # ['orig_question', 'question']
+    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--question_key', type=str, default='orig_question')#, required=True)  # ['orig_question', 'question']
     parser.add_argument('--base_dir', type=str, required=True)
 
     args = parser.parse_args()
     question_key = args.question_key
-    if question_key not in ['orig_question', 'question']:
+    if question_key not in ['orig_question', 'reformat_question']:
         raise ValueError(f"Invalid question key: {question_key}")
 
 
-    config = GenerateConfig(max_connections=args.batch_size, timeout=300)  #max_tokens=8192
-    config_oai = GenerateConfig(max_connections=8, timeout=120)
+    config = GenerateConfig(max_connections=args.batch_size, timeout=300) # max_tokens=8192
     models = list()
 
 
     models_dict = dict()
 
     
-    # models_dict['gpt-oss-120b'] = get_model(model="v_llm/gpt-oss-120b", base_url="https://pn131285.nist.gov:8447/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['gpt-oss-120b'] = get_model(model="v_llm/gpt-oss-120b", base_url="https://pn131285.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     # models_dict['openai/gpt-oss-20b'] = get_model(model="v_llm/openai/gpt-oss-20b", base_url="https://iarpa018.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
     
-    # models_dict['google/gemma-3-1b-it'] = get_model(model="v_llm/google/gemma-3-1b-it", base_url="https://pn120393.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['google/gemma-3-4b-it'] = get_model(model="v_llm/google/gemma-3-4b-it", base_url="https://pn120393.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['google/gemma-3-12b-it'] = get_model(model="v_llm/google/gemma-3-12b-it", base_url="https://pn120393.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['google/gemma-3-27b-it'] = get_model(model="v_llm/google/gemma-3-27b-it", base_url="https://pn125915.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['google/gemma-3-1b-it'] = get_model(model="v_llm/google/gemma-3-1b-it", base_url="https://pn120393.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['google/gemma-3-4b-it'] = get_model(model="v_llm/google/gemma-3-4b-it", base_url="https://pn120393.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['google/gemma-3-12b-it'] = get_model(model="v_llm/google/gemma-3-12b-it", base_url="https://pn120393.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['google/gemma-3-27b-it'] = get_model(model="v_llm/google/gemma-3-27b-it", base_url="https://pn125915.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
-    # models_dict['meta-llama/Llama-3.2-3B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.2-3B-Instruct", base_url="https://pn125915.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['meta-llama/Llama-3.1-8B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.1-8B-Instruct", base_url="https://pn125915.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['meta-llama/Llama-3.2-3B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.2-3B-Instruct", base_url="https://pn125915.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['meta-llama/Llama-3.1-8B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.1-8B-Instruct", base_url="https://pn131275.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
         
-    # models_dict['microsoft/phi-4'] = get_model(model="v_llm/microsoft/phi-4", base_url="https://pn125916.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['microsoft/phi-4'] = get_model(model="v_llm/microsoft/phi-4", base_url="https://pn125916.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
     
-    # models_dict['Qwen/Qwen3-1.7B'] = get_model(model="v_llm/Qwen/Qwen3-1.7B", base_url="https://pn125916.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['Qwen/Qwen3-4B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-4B-Instruct-2507", base_url="https://pn125916.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['Qwen/Qwen2.5-7B-Instruct'] = get_model(model="v_llm/Qwen/Qwen2.5-7B-Instruct", base_url="https://pn125917.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # models_dict['Qwen/Qwen3-30B-A3B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-30B-A3B-Instruct-2507", base_url="https://iarpa017.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['Qwen/Qwen3-1.7B'] = get_model(model="v_llm/Qwen/Qwen3-1.7B", base_url="https://pn125916.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['Qwen/Qwen3-4B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-4B-Instruct-2507", base_url="https://pn125916.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['Qwen/Qwen2.5-7B-Instruct'] = get_model(model="v_llm/Qwen/Qwen2.5-7B-Instruct", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    models_dict['Qwen/Qwen3-30B-A3B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-30B-A3B-Instruct-2507", base_url="https://pn131275.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     # models_dict['Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'] = get_model(model="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8", base_url="https://pn131285.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     
 
 
-    models_dict['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'] = get_model(model="v_llm/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['meta-llama/Llama-3.3-70B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.3-70B-Instruct", base_url="https://pn131285.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'] = get_model(model="v_llm/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # config_mini = GenerateConfig(max_connections=10, timeout=300)
+    # models_dict['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'] = get_model(model="v_llm/Llama-4-Maverick-17B-128E-Instruct-FP8", base_url="https://rchat.nist.gov/api", config=config_mini, api_key=os.getenv("RCHAT_API_KEY"))
 
-    models_dict['openai/gpt-5'] = get_model(model="openai/gpt-5", base_url="https://api.openai.com/v1", config=config_oai, api_key=os.getenv("OPENAI_API_KEY"))
-    models_dict['openai/gpt-5-mini'] = get_model(model="openai/gpt-5-mini", base_url="https://api.openai.com/v1", config=config_oai, api_key=os.getenv("OPENAI_API_KEY"))
-    models_dict['openai/gpt-5-nano'] = get_model(model="openai/gpt-5-nano", base_url="https://api.openai.com/v1", config=config_oai, api_key=os.getenv("OPENAI_API_KEY"))
+    # models_dict['meta-llama/Llama-3.3-70B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.3-70B-Instruct", base_url="https://pn131285.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+
+    # models_dict['openai/gpt-5'] = get_model(model="openai/gpt-5", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
+    # models_dict['openai/gpt-5-mini'] = get_model(model="openai/gpt-5-mini", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
+    # models_dict['openai/gpt-5-nano'] = get_model(model="openai/gpt-5-nano", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
 
 
+
+
+
+    
 
     # base_dir = './data-subset-500'
     # base_dir = './data-post-cutoff'
@@ -281,14 +290,14 @@ if __name__ == '__main__':
 
     available_models = list(models_dict.keys())
 
-    for ds in ['oe-Q235B-filtered', 'oe-gpt120b-filtered']:
+    for ds in ['oe-gpt120b-afc-filtered']:
         dataset_fldr = f"{base_dir}/{ds}"
         if not os.path.exists(dataset_fldr):
             continue
+
         print("--------------------------------")
         print(f"Processing folder {ds}")
 
-        
         
 
         available_task_names_dict = get_task_dir_dict(dataset_fldr)
@@ -357,4 +366,5 @@ if __name__ == '__main__':
             models_list = [models_dict[model] for model in work_models]
             json_fp = available_task_names_dict[task_name]
             work_tasks = [get_task(task_name, json_fp, question_key)]
-            eval(work_tasks, model=models_list, display=disp_type, log_format='json', no_log_images=True, no_log_samples=True, log_dir=log_dir, max_connections=32) #, timeout=300)
+            eval(work_tasks, model=models_list, display=disp_type, log_format='json', no_log_images=True, no_log_samples=True, log_dir=log_dir, max_connections=128) #, max_subprocesses=64) #, timeout=300)
+            

@@ -8,48 +8,52 @@ import random
 import answer_parser
 from model_interface import SglModelAsync
 import utils
-import copy
 
 import prompts
 
 
+def build_og_msg(context:str, question:str, answer:str):
+    
+    prompt = prompts.QUESTION_REFORMAT_PROMPT.format(context=context, question=question, answer=answer)
+    return prompt
 
 
 def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_effort:str='high', connection_parallelism:int=64) -> list[dict]:
 
     # build the prompts
-    q_prompts = [prompts.QUESTION_SELF_UPLIFT_PROMPT.format(question=d['orig_question']) for d in dataset]
+    
+    prompts = [build_og_msg(d['context'], d['orig_question'], d['orig_answer']) for d in dataset]
 
     model = SglModelAsync(remote=remote, model=model, reasoning_effort=reasoning_effort, connection_parallelism=connection_parallelism)
-
-    results, total_time = model.generate(q_prompts)
+    results, total_time = model.generate(prompts)
     print(f"in total took: {total_time} seconds")
     print(f"per question took: {total_time / len(results)} seconds for {len(results)} questions")
 
-    to_delete = list()
+    failed_responses = list()
     for i in range(len(results)):
         res = results[i]
         if res['error'] is not None:
-            raise Exception(f"Error: {res['error']}")
+            failed_responses.append(i)
+            dataset[i]['reformat_question'] = None
+            dataset[i]['reformat_answer'] = None
         else:
-            dataset[i]['reformat_response'] = res['content']
-            dataset[i]['reformat_scratchpad'] = res['scratchpad']
-            parsed = answer_parser.parse_question_open(res['content'])
+            parsed = answer_parser.parse_generated_open(res['content'])
             if parsed is None:
-                to_delete.append(i)
-                # raise Exception(f"Failed to parse response: {res['content']}")
+                dataset[i]['reformat_question'] = None
+                dataset[i]['reformat_answer'] = None
+                failed_responses.append(i)
             else:
-                dataset[i]['question'] = parsed['question']
+                dataset[i]['reformat_question'] = parsed['question']
+                dataset[i]['reformat_answer'] = parsed['correct_answer']
 
-    dataset = copy.deepcopy(dataset)
-    for i in sorted(to_delete, reverse=True):
-        del dataset[i]
 
+    if len(failed_responses) > 0:
+        raise Exception(f"Failed to rewrite {len(failed_responses)} questions")
+        # print(f"Failed to rewrite {len(failed_responses)} questions, removing them from the dataset")
+        # for i in sorted(failed_responses, reverse=True):
+        #     del dataset[i]
+    
     return dataset
-        
-
-    
-    
     
 
 
@@ -65,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--remote', type=str, default="sierra")
     parser.add_argument('--model', type=str, default="meta-llama/Llama-3.3-70B-Instruct")
     parser.add_argument('--reasoning_effort', type=str, default='high', help='reasoning effort, options: high, medium, low')
-    parser.add_argument('--connection_parallelism', type=int, default=256, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
+    parser.add_argument('--connection_parallelism', type=int, default=32, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
 
     args = parser.parse_args()
     # print("Generating reformatted questions")
@@ -102,39 +106,19 @@ if __name__ == '__main__':
 
     # verify that each element in the dataset has the following keys: question, answer, context
     for item in dataset:
-        if 'question' not in item or 'answer' not in item or 'context' not in item:
+        if 'orig_question' not in item or 'orig_answer' not in item or 'context' not in item:
             raise ValueError('each element in the dataset must have the following keys: question, answer, context')
 
     print("Dataset has %d contexts" % len(dataset))
 
-    # Create a list to store model responses
-    model_responses = list()
-    # Copy over question (into orig_question), id, and context
-    for item in dataset:
-        response_item = {}
-        if 'question' in item:
-            response_item['orig_question'] = item['question']
-        else:
-            raise ValueError("No question found in {item}")
-        if 'answer' in item:
-            response_item['orig_answer'] = item['answer']
-        else:
-            raise ValueError("No answer found in {item}")
-        if 'context' in item:
-            response_item['context'] = item['context']
-        else:
-            raise ValueError("No context found in {item}")
-        model_responses.append(response_item)
-    dataset = model_responses
+    dataset = reformat_questions(dataset, args.remote, args.model, args.reasoning_effort, args.connection_parallelism)
+
+    elapsed_time = time.time() - start_time
 
     
-    if not os.path.exists(output_fn):
-        model_dataset = reformat_questions(dataset, args.remote, args.model, args.reasoning_effort, args.connection_parallelism)
-
-        # print(f"Saving (N={n}) {len(model_dataset)} questions to {output_fn}")
-        
-        with open(output_fn, 'w') as f:
-            json.dump(model_dataset, f, indent=2)
+    print(f"Saving {len(dataset)} questions to {output_fn}")
+    with open(output_fn, 'w') as f:
+        json.dump(dataset, f, indent=2)
 
 
 

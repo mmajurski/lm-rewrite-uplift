@@ -2,6 +2,7 @@ import os
 import httpx
 import openai
 import asyncio
+from asyncio import Semaphore
 from openai import AsyncOpenAI, OpenAI
 import time
 from openai.types.responses import ResponseOutputMessage, ResponseReasoningItem
@@ -132,7 +133,7 @@ class SglModelAsync:
             
             retry_count = 0
             latest_error = None
-            retry_limit = 10
+            retry_limit = 4
             while retry_count < retry_limit:
                 try:
                     if chat_completion_api:
@@ -163,10 +164,11 @@ class SglModelAsync:
                     break
                 except Exception as e:
                     latest_error = e
+                    print(f"Generate try {retry_count} error: {latest_error}")
                     retry_count += 1
-                    time.sleep(0.2)
+                    # time.sleep(1.0)
             if retry_count >= retry_limit:
-                raise Exception(f"Failed to generate response: {latest_error}")
+                raise Exception(f"Failed (retry count {retry_count}) to generate response: {latest_error}")
                 
                 
             elapsed = time.time() - start_time
@@ -212,46 +214,76 @@ class SglModelAsync:
         
 
     async def process_all_batches(self, model_prompts):
-        """Process all batches with a single client instance, in chunks of 64"""
+        """Process all prompts with a rolling buffer of N concurrent connections"""
 
         total_start_time = time.time()
         results = []
         
-        # Process prompts in batches
-        batch_size = self.connection_parallelism
-        for i in range(0, len(model_prompts), batch_size):
-            batch_prompts = model_prompts[i:i+batch_size]
-            current_time = time.strftime("%H:%M:%S")
-            print(f"  ({current_time}) remote batch {i//batch_size + 1}/{(len(model_prompts)-1)//batch_size + 1} ({len(batch_prompts)} prompts per batch)")
-            
-            # Create tasks for this batch with the shared client
-            batch_tasks = [
-                self.generate_text_async(self.model, self.client, prompt, i+j, self.reasoning_effort, self.chat_completion_api) 
-                for j, prompt in enumerate(batch_prompts)
-            ]
-
-            # Execute this batch concurrently and gather results
-            batch_results = await asyncio.gather(*batch_tasks)
-            failed_flag = False
-            for res in batch_results:
-                if res['error'] is not None:
-                    failed_flag = True
-                    break
-            if failed_flag:
-                print(80*"=")
-                print(f"Failed to generate response for some prompts")
-                # Find the first failed result and print its error
-                for idx, res in enumerate(batch_results):
-                    if res['error'] is not None:
-                        print(f"Error in prompt {i + idx}: {res['error']}")
-                        print(f"Prompt: \n\n\n{res['prompt']}\n\n\n")
-                        break
-                print(80*"=")
-                raise Exception("Failed to generate response for some prompts")
-            results.extend(batch_results)
+        # Create a semaphore to limit concurrent connections
+        semaphore = Semaphore(self.connection_parallelism)
+        
+        # Track active tasks
+        active_tasks = 0
+        
+        async def process_single_prompt(prompt, index):
+            """Process a single prompt with semaphore limiting"""
+            nonlocal active_tasks
+            async with semaphore:  # This will wait if we're at the limit
+                active_tasks += 1
+                try:
+                    return await self.generate_text_async(
+                        self.model, 
+                        self.client, 
+                        prompt, 
+                        index, 
+                        self.reasoning_effort, 
+                        self.chat_completion_api
+                    )
+                finally:
+                    active_tasks -= 1
+        
+        # Create all tasks at once - they'll be limited by the semaphore
+        tasks = [
+            asyncio.create_task(process_single_prompt(prompt, i)) 
+            for i, prompt in enumerate(model_prompts)
+        ]
+        
+        # Process with progress tracking
+        completed = 0
+        total = len(tasks)
+        
+        # Use as_completed to process results as they finish
+        for coro in asyncio.as_completed(tasks):
+            try:
+                result = await coro
+                results.append(result)
+                completed += 1
+                
+                # Progress reporting
+                if completed % 10 == 0 or completed == total:
+                    current_time = time.strftime("%H:%M:%S")
+                    print(f"  ({current_time}) Completed {completed}/{total} prompts")
+                
+                    # Print the number of truly active connections (not blocked by semaphore)
+                    print(f"    [DEBUG] Active connections: {active_tasks} (max allowed: {self.connection_parallelism})")
+                
+                # Check for errors and handle them
+                if result['error'] is not None:
+                    print(80*"=")
+                    print(f"Failed to generate response for prompt {result['request_id']}")
+                    print(f"Error: {result['error']}")
+                    print(f"Prompt: \n\n\n{result.get('prompt', 'N/A')}\n\n\n")
+                    print(80*"=")
+                    raise Exception(f"Failed to generate response for prompt {result['request_id']}: {result['error']}")
+                    
+            except Exception as e:
+                print(f"Error processing task: {e}")
+                raise
+        
+        # Sort results by request_id to maintain original order
+        results.sort(key=lambda x: x['request_id'])
         
         total_time = time.time() - total_start_time
-        
         return results, total_time
     
     

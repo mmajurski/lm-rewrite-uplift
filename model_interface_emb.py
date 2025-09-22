@@ -153,7 +153,7 @@ class SglModelAsyncEmb:
                 for idx, res in enumerate(batch_results):
                     if res['error'] is not None:
                         print(f"Error in prompt {i + idx}: {res['error']}")
-                        print(f"Prompt: \n\n\n{res['prompt']}\n\n\n")
+                        print(f"Prompt: \n\n{res['prompt']}")
                         break
                 print(80*"=")
                 raise Exception("Failed to generate response for some prompts")
