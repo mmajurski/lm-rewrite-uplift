@@ -73,8 +73,9 @@ plot_markers = [
 
 valid_model_list = ['gpt-oss-20b', 'gpt-oss-120b', 'gemma-3-4b-it', 'Qwen3-1.7B']
 
-for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc', 'data-subset-500-afc']:
-    for generating_model_name in ['gpt120b', 'Q235B']:
+#for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc', 'data-subset-500-afc']:
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+    for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
         main_dir = f'./{dataset_fldr}/'
 
         if dataset_fldr.endswith('-afc'):
@@ -132,6 +133,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
+                d_fp = d_fp.replace('mmajursk','mmajurski')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
 
@@ -139,33 +141,39 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                     impact_of_reformat[dataset_name] = dict()
                 
                 samples = data['samples']
-                for q_id, sample in enumerate(samples):
-                    orig_question = source_dataset[q_id]['orig_question']
-                    # reformat_question = source_dataset[q_id]['question']
-                    # # reformat_answer = source_dataset[q_id]['answer']
-                    # orig_answer = source_dataset[q_id]['orig_answer']
-                    # context = source_dataset[q_id]['context']
-                    if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
-                        acc = sample['scores']['model_graded_qa']['value'] == 'C'
-                        if orig_question not in impact_of_reformat[dataset_name]:
-                            impact_of_reformat[dataset_name][orig_question] = dict()
-                            # impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
-                            # impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
-                            # impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
+                try:
+                    for q_id, sample in enumerate(samples):
+                        orig_question = source_dataset[q_id]['orig_question']
+                        # reformat_question = source_dataset[q_id]['question']
+                        # # reformat_answer = source_dataset[q_id]['answer']
+                        # orig_answer = source_dataset[q_id]['orig_answer']
+                        # context = source_dataset[q_id]['context']
+                        if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
+                            acc = sample['scores']['model_graded_qa']['value'] == 'C'
+                            if orig_question not in impact_of_reformat[dataset_name]:
+                                impact_of_reformat[dataset_name][orig_question] = dict()
+                                # impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
+                                # impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
+                                # impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
 
-                            impact_of_reformat[dataset_name][orig_question]['orig_answer_giveaway_score'] = source_dataset[q_id]['orig_answer_giveaway_score']
-                            impact_of_reformat[dataset_name][orig_question]['reformat_answer_giveaway_score'] = source_dataset[q_id]['reformat_answer_giveaway_score']
+                                impact_of_reformat[dataset_name][orig_question]['orig_answer_giveaway_score'] = source_dataset[q_id]['orig_answer_giveaway_score']
+                                impact_of_reformat[dataset_name][orig_question]['reformat_answer_giveaway_score'] = source_dataset[q_id]['reformat_answer_giveaway_score']
 
-                            
-                            # impact_of_reformat[dataset_name][orig_question]['reformat_answer'] = reformat_answer
-                            # impact_of_reformat[dataset_name][orig_question]['context'] = context
-                            impact_of_reformat[dataset_name][orig_question]['models'] = dict()
-                        if model_name not in impact_of_reformat[dataset_name][orig_question]['models']:
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name] = dict()
-                        if log_type == 'ref':
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name]['ref_acc'] = acc    
-                        else:
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name]['reformat_acc'] = acc    
+                                
+                                # impact_of_reformat[dataset_name][orig_question]['reformat_answer'] = reformat_answer
+                                # impact_of_reformat[dataset_name][orig_question]['context'] = context
+                                impact_of_reformat[dataset_name][orig_question]['models'] = dict()
+                            if model_name not in impact_of_reformat[dataset_name][orig_question]['models']:
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name] = dict()
+                            if log_type == 'ref':
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name]['ref_acc'] = acc    
+                            else:
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name]['reformat_acc'] = acc    
+                except:
+                    print(f"Error processing {fn}")
+                    print(f"model_name {model_name}")
+                    print(f"source_dataset {d_fp}")
+                    raise Exception("Error processing sample")
                         
 
 

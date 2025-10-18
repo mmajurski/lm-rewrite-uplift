@@ -158,18 +158,17 @@ import answer_parser
 
 
 # data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500'
-data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-afc'
+# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-afc'
 # data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff'
 # data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-post-cutoff-afc'
-# data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-SU'
-fldrs = ['source_data'] #, 'oe-gpt120b', 'oe-gpt120b-filtered' ['oe-gpt120b', 'oe-gpt120b-filtered', 'oe-Q235B', 'oe-Q235B-filtered']
+data_dir = '/home/mmajursk/github/lm-rewrite-uplift/data-subset-500-SU'
+fldrs = ['oe-gpt120b', 'oe-gpt120b-filtered'] # ['oe-gpt120b', 'oe-gpt120b-filtered', 'oe-Q235B', 'oe-Q235B-filtered']
 
 for fldr in fldrs:
     ifp = os.path.join(data_dir, fldr)
     
     fns = [fn for fn in os.listdir(ifp) if fn.endswith('.json')]
     fns.sort()
-    print(fns)
 
     for fn in fns:
         fn = os.path.join(ifp, fn)
@@ -177,13 +176,13 @@ for fldr in fldrs:
         with open(fn, 'r') as f:
             data = json.load(f)
 
-        # if 'reformat_question' in data[0]:
-        #     continue
+        if 'reformat_question' in data[0]:
+            continue
         print(f"Processing {fn}")
 
         for i in range(len(data)):
             del_keys = ['reformat_response','reformat_scratchpad', 'explanation', 'reformat_answer_giveaway_response', 'reformat_answer_giveaway_scratchpad', 'orig_answer_giveaway_response', 'orig_answer_giveaway_scratchpad']
-            del_keys.extend(['reformat_answer_giveaway_score', 'reformat_question_similarity_score', 'reformat_answer_similarity_score', 'reformat_question_clarity_score', 'reformat_question_difficulty_score', 'reformat_question_groundedness_score'])
+            del_keys.extend(['reformat_answer_giveaway_score', 'reformat_question_similarity_score', 'reformat_answer_similarity_score'])
             for k in list(data[i].keys()):
                 if '_embeddings' in k:
                     del_keys.append(k)
@@ -192,15 +191,12 @@ for fldr in fldrs:
                     del data[i][key]
             if 'answer' not in data[i]:
                 data[i]['answer'] = data[i]['orig_answer']
-            # data[i]['reformat_question'] = data[i]['question']
-            # data[i]['reformat_answer'] = data[i]['answer']
+            data[i]['reformat_question'] = data[i]['question']
+            data[i]['reformat_answer'] = data[i]['answer']
             # del data[i]['afc_question']
             # del data[i]['afc_answer']
-            # 
-            if 'question' in data[i]:
-                del data[i]['question']
-            if 'answer' in data[i]:
-                del data[i]['answer']
+            del data[i]['question']
+            del data[i]['answer']
 
             # data[i]['context'] = data[i]['context_no_answer']
             # del data[i]['context_no_answer']

@@ -64,9 +64,10 @@ plot_markers = [
 ]
 
 # ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']
-for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']:
+#for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']:
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
     for question_source in ['orig', 'reformat']:
-        for generating_model_name in ['gpt120b', 'Q235B']:
+        for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
             
             main_dir = f'./{dataset_fldr}/'
 
@@ -107,7 +108,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
 
 
                 for fn_idx, fn in enumerate(logs):
-                    print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
+                    # print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
                     with open(os.path.join(question_folder, fn), 'r') as f:
                         data = json.load(f)
                     
@@ -116,6 +117,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
+                    d_fp = d_fp.replace('mmajursk','mmajurski')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 

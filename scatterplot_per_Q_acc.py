@@ -6,7 +6,7 @@ import numpy as np
 import json
 import re
 
-import model_interface
+import utils
 
 from dotenv import load_dotenv
 
@@ -73,8 +73,8 @@ plot_markers = [
 
 
 # ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']
-for dataset_fldr in ['data-post-cutoff-afc','data-subset-500-afc']:
-    for generating_model_name in ['gpt120b', 'Q235B']:
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+    for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
             main_dir = f'./{dataset_fldr}/'
             
             if dataset_fldr.endswith('-afc'):
@@ -97,6 +97,9 @@ for dataset_fldr in ['data-post-cutoff-afc','data-subset-500-afc']:
             else:
                 reformat_logs = []
 
+            
+            
+
 
         
             impact_of_reformat = dict()
@@ -113,11 +116,27 @@ for dataset_fldr in ['data-post-cutoff-afc','data-subset-500-afc']:
                 else:
                     logs = reformat_logs
                     question_folder = reformat_question_folder
+                completed_logs, completed_fns = utils.get_completed_logs(question_folder)
+                model_dataset_tuple = set()
+                to_remove_logs = list()
+                for log in completed_logs:
+                    mn = log['model'].replace('v_llm/', '')
+                    ds = log['task_registry_name']
+                    v = (mn, ds)
+                    if v in model_dataset_tuple:
+                        to_remove_logs.append(log)
+                    else:
+                        model_dataset_tuple.add(v)
+                if len(to_remove_logs) > 0:
+                    print(f"Removing {len(to_remove_logs)} Duplicatelogs")
+                    for log in to_remove_logs:
+                        print(f"{log}")
+                    raise Exception("Duplicate logs found")
 
 
 
                 for fn_idx, fn in enumerate(logs):
-                    print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
+                    # print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
                     with open(os.path.join(question_folder, fn), 'r') as f:
                         data = json.load(f)
                     
@@ -126,6 +145,7 @@ for dataset_fldr in ['data-post-cutoff-afc','data-subset-500-afc']:
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
+                    d_fp = d_fp.replace('mmajursk','mmajurski')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -214,9 +234,9 @@ for dataset_fldr in ['data-post-cutoff-afc','data-subset-500-afc']:
                             'num_questions': len(score_lists['uplifts'])
                         }
 
-            # # Save the average uplift data
-            # with open(f'avg_uplift_per_model_dataset_{generating_model_name}{giveaway_name}.json', 'w') as f:
-            #     json.dump(avg_uplift_per_model_dataset, f, indent=2)
+            # Save the average uplift data
+            with open(f'avg_uplift_per_model_dataset_{generating_model_name}_{dataset_fldr}.json', 'w') as f:
+                json.dump(avg_uplift_per_model_dataset, f, indent=2)
 
 
             # Create scatterplots per model

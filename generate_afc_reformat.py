@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('--remote', type=str, default="sierra")
     parser.add_argument('--model', type=str, default="meta-llama/Llama-3.3-70B-Instruct")
     parser.add_argument('--reasoning_effort', type=str, default='high', help='reasoning effort, options: high, medium, low')
-    parser.add_argument('--connection_parallelism', type=int, default=16, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
+    parser.add_argument('--connection_parallelism', type=int, default=32, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
 
     args = parser.parse_args()
     # print("Generating reformatted questions")

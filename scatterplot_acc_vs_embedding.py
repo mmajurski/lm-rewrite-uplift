@@ -75,8 +75,8 @@ plot_markers = [
 embedding_models = ['Qwen3-Embedding-8B', 'e5-mistral-7b-instruct']
 
 
-for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU','data-post-cutoff-afc','data-subset-500-afc']:
-    for generating_model_name in ['gpt120b', 'Q235B']:
+for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+    for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
         main_dir = f'./{dataset_fldr}/'
 
         if dataset_fldr.endswith('-afc'):
@@ -118,7 +118,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
 
 
             for fn_idx, fn in enumerate(logs):
-                print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
+                # print(f"Processing {fn} ({fn_idx+1}/{len(logs)})")
                 with open(os.path.join(question_folder, fn), 'r') as f:
                     data = json.load(f)
                 
@@ -127,6 +127,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
+                d_fp = d_fp.replace('mmajursk','mmajurski')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
 
@@ -134,38 +135,44 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                     impact_of_reformat[dataset_name] = dict()
                 
                 samples = data['samples']
-                for q_id, sample in enumerate(samples):
-                    question = sample['input']
-                    orig_question = source_dataset[q_id]['orig_question']
-                    reformat_question = source_dataset[q_id]['reformat_question']
+                try:
+                    for q_id, sample in enumerate(samples):
+                        question = sample['input']
+                        orig_question = source_dataset[q_id]['orig_question']
+                        reformat_question = source_dataset[q_id]['reformat_question']
 
-                    # reformat_answer = source_dataset[q_id]['answer']
-                    orig_answer = source_dataset[q_id]['orig_answer']
-                    context = source_dataset[q_id]['context']
-                    if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
-                        acc = sample['scores']['model_graded_qa']['value'] == 'C'
-                        if orig_question not in impact_of_reformat[dataset_name]:
-                            impact_of_reformat[dataset_name][orig_question] = dict()
-                            impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
-                            impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
-                            impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
-                            # impact_of_reformat[dataset_name][orig_question]['reformat_answer'] = reformat_answer
-                            impact_of_reformat[dataset_name][orig_question]['context'] = context
-                            impact_of_reformat[dataset_name][orig_question]['models'] = dict()
-                        if model_name not in impact_of_reformat[dataset_name][orig_question]['models']:
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name] = dict()
-                        if log_type == 'ref':
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name]['ref_acc'] = acc    
-                        else:
-                            impact_of_reformat[dataset_name][orig_question]['models'][model_name]['reformat_acc'] = acc    
-
-                        if 'embeddings' not in impact_of_reformat[dataset_name][orig_question].keys():
-                            impact_of_reformat[dataset_name][orig_question]['embeddings'] = dict()
-                        for e_model in embedding_models:
+                        # reformat_answer = source_dataset[q_id]['answer']
+                        orig_answer = source_dataset[q_id]['orig_answer']
+                        context = source_dataset[q_id]['context']
+                        if 'model_graded_qa' in sample['scores']:  # if the question graded correctly
+                            acc = sample['scores']['model_graded_qa']['value'] == 'C'
+                            if orig_question not in impact_of_reformat[dataset_name]:
+                                impact_of_reformat[dataset_name][orig_question] = dict()
+                                impact_of_reformat[dataset_name][orig_question]['orig_question'] = orig_question
+                                impact_of_reformat[dataset_name][orig_question]['reformat_question'] = reformat_question
+                                impact_of_reformat[dataset_name][orig_question]['orig_answer'] = orig_answer
+                                # impact_of_reformat[dataset_name][orig_question]['reformat_answer'] = reformat_answer
+                                impact_of_reformat[dataset_name][orig_question]['context'] = context
+                                impact_of_reformat[dataset_name][orig_question]['models'] = dict()
+                            if model_name not in impact_of_reformat[dataset_name][orig_question]['models']:
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name] = dict()
                             if log_type == 'ref':
-                                impact_of_reformat[dataset_name][orig_question]['embeddings'][f'{e_model}_cosine_embR_embC'] = source_dataset[q_id][f'{e_model}_embeddings']['cosine_embR_embC']
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name]['ref_acc'] = acc    
                             else:
-                                impact_of_reformat[dataset_name][orig_question]['embeddings'][f'{e_model}_cosine_embO_embC'] = source_dataset[q_id][f'{e_model}_embeddings']['cosine_embO_embC']
+                                impact_of_reformat[dataset_name][orig_question]['models'][model_name]['reformat_acc'] = acc    
+
+                            if 'embeddings' not in impact_of_reformat[dataset_name][orig_question].keys():
+                                impact_of_reformat[dataset_name][orig_question]['embeddings'] = dict()
+                            for e_model in embedding_models:
+                                if log_type == 'ref':
+                                    impact_of_reformat[dataset_name][orig_question]['embeddings'][f'{e_model}_cosine_embR_embC'] = source_dataset[q_id][f'{e_model}_embeddings']['cosine_embR_embC']
+                                else:
+                                    impact_of_reformat[dataset_name][orig_question]['embeddings'][f'{e_model}_cosine_embO_embC'] = source_dataset[q_id][f'{e_model}_embeddings']['cosine_embO_embC']
+                except Exception as e:
+                    print(f"Error processing {fn}")
+                    print(f"model_name {model_name}")
+                    print(f"source_dataset {d_fp}")
+                    raise Exception("Error processing sample")
 
 
 
