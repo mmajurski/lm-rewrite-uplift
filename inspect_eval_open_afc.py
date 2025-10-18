@@ -33,7 +33,7 @@ load_dotenv()
 # GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
 GRADER_MODEL="v_llm/gpt-oss-120b"
-GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8443/v1"
+GRADER_MODEL_BASE_URL="https://pn131285.nist.gov:8447/v1"
 GRADER_MODEL_API_KEY=os.getenv("VLLM_API_KEY")
 
 # GRADER_MODEL="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8"
@@ -75,7 +75,7 @@ Answer the following open ended short answer question. The last line of your res
 
 def base_task(lcl_fp, question_key):
 
-    config = GenerateConfig(max_connections=32, timeout=300)
+    config = GenerateConfig(max_connections=64, timeout=120)
     model = get_model(model=GRADER_MODEL, base_url=GRADER_MODEL_BASE_URL, config=config, api_key=GRADER_MODEL_API_KEY)
 
     
@@ -87,6 +87,8 @@ def base_task(lcl_fp, question_key):
     for row in ds:
 
         samples.append(Sample(input=str(row[question_key]), target=str(row['orig_answer'])))
+
+    # samples = samples[0:50]  # TODO remove
     
     return Task(
         dataset = samples,
@@ -171,22 +173,22 @@ def arXiv_2502_17521v1_yb(dataset_fldr, question_key):
 
 def get_task_dir_dict(dataset_fldr):
     return {
-        'flashrag_2wikimultihopqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_2wikimultihopqa.json')),
-        'flashrag_boolq': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_boolq.json')),
-        'flashrag_fermi': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_fermi.json')),
-        'flashrag_hotpotqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_hotpotqa.json')),
-        'flashrag_msmarcoqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_msmarcoqa.json')),
-        'flashrag_musique': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_musique.json')),
-        'mrqa_HotpotQA': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_HotpotQA.json')),
-        'mrqa_NaturalQuestionsShort': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_NaturalQuestionsShort.json')),
-        'mrqa_TriviaQA_web': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_TriviaQA-web.json')),
-        'squadv2': os.path.abspath(os.path.join(dataset_fldr, 'squadv2.json')),
-        'triva_qa': os.path.abspath(os.path.join(dataset_fldr, 'triva_qa.json')),
+        # 'flashrag_2wikimultihopqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_2wikimultihopqa.json')),
+        # 'flashrag_boolq': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_boolq.json')),
+        # 'flashrag_fermi': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_fermi.json')),
+        # 'flashrag_hotpotqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_hotpotqa.json')),
+        # 'flashrag_msmarcoqa': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_msmarcoqa.json')),
+        # 'flashrag_musique': os.path.abspath(os.path.join(dataset_fldr, 'flashrag_musique.json')),
+        # 'mrqa_HotpotQA': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_HotpotQA.json')),
+        # 'mrqa_NaturalQuestionsShort': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_NaturalQuestionsShort.json')),
+        # 'mrqa_TriviaQA_web': os.path.abspath(os.path.join(dataset_fldr, 'mrqa_TriviaQA-web.json')),
+        # 'squadv2': os.path.abspath(os.path.join(dataset_fldr, 'squadv2.json')),
+        # 'triva_qa': os.path.abspath(os.path.join(dataset_fldr, 'triva_qa.json')),
         'hle': os.path.abspath(os.path.join(dataset_fldr, 'hle.json')),
-        'ai_plan': os.path.abspath(os.path.join(dataset_fldr, 'ai_plan.json')),
-        'ai_plan_yb': os.path.abspath(os.path.join(dataset_fldr, 'ai_plan_yb.json')),
-        'arXiv_2502_17521v1': os.path.abspath(os.path.join(dataset_fldr, 'arXiv_2502_17521v1.json')),
-        'arXiv_2502_17521v1_yb': os.path.abspath(os.path.join(dataset_fldr, 'arXiv_2502_17521v1_yb.json')),
+        # 'ai_plan': os.path.abspath(os.path.join(dataset_fldr, 'ai_plan.json')),
+        # 'ai_plan_yb': os.path.abspath(os.path.join(dataset_fldr, 'ai_plan_yb.json')),
+        # 'arXiv_2502_17521v1': os.path.abspath(os.path.join(dataset_fldr, 'arXiv_2502_17521v1.json')),
+        # 'arXiv_2502_17521v1_yb': os.path.abspath(os.path.join(dataset_fldr, 'arXiv_2502_17521v1_yb.json')),
     }
 
 def get_task(name: str, dataset_fldr: str, question_key: str):
@@ -239,38 +241,35 @@ if __name__ == '__main__':
     models_dict = dict()
 
     
-    models_dict['gpt-oss-120b'] = get_model(model="v_llm/gpt-oss-120b", base_url="https://pn131285.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['gpt-oss-120b'] = get_model(model="v_llm/gpt-oss-120b", base_url="https://pn131285.nist.gov:8447/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     # models_dict['openai/gpt-oss-20b'] = get_model(model="v_llm/openai/gpt-oss-20b", base_url="https://iarpa018.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
     
-    models_dict['google/gemma-3-1b-it'] = get_model(model="v_llm/google/gemma-3-1b-it", base_url="https://pn120393.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['google/gemma-3-4b-it'] = get_model(model="v_llm/google/gemma-3-4b-it", base_url="https://pn120393.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['google/gemma-3-12b-it'] = get_model(model="v_llm/google/gemma-3-12b-it", base_url="https://pn120393.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['google/gemma-3-27b-it'] = get_model(model="v_llm/google/gemma-3-27b-it", base_url="https://pn125915.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['google/gemma-3-1b-it'] = get_model(model="v_llm/google/gemma-3-1b-it", base_url="https://iarpa017.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['google/gemma-3-4b-it'] = get_model(model="v_llm/google/gemma-3-4b-it", base_url="https://pn120393.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['google/gemma-3-12b-it'] = get_model(model="v_llm/google/gemma-3-12b-it", base_url="https://pn120393.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['google/gemma-3-27b-it'] = get_model(model="v_llm/google/gemma-3-27b-it", base_url="https://pn125916.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
-    models_dict['meta-llama/Llama-3.2-3B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.2-3B-Instruct", base_url="https://pn125915.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['meta-llama/Llama-3.1-8B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.1-8B-Instruct", base_url="https://pn131275.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['meta-llama/Llama-3.2-3B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.2-3B-Instruct", base_url="https://pn125916.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['meta-llama/Llama-3.1-8B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.1-8B-Instruct", base_url="https://pn131275.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
         
-    models_dict['microsoft/phi-4'] = get_model(model="v_llm/microsoft/phi-4", base_url="https://pn125916.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['microsoft/phi-4'] = get_model(model="v_llm/microsoft/phi-4", base_url="https://pn125916.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
     
-    models_dict['Qwen/Qwen3-1.7B'] = get_model(model="v_llm/Qwen/Qwen3-1.7B", base_url="https://pn125916.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['Qwen/Qwen3-4B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-4B-Instruct-2507", base_url="https://pn125916.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['Qwen/Qwen2.5-7B-Instruct'] = get_model(model="v_llm/Qwen/Qwen2.5-7B-Instruct", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    models_dict['Qwen/Qwen3-30B-A3B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-30B-A3B-Instruct-2507", base_url="https://pn131275.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['Qwen/Qwen3-1.7B'] = get_model(model="v_llm/Qwen/Qwen3-1.7B", base_url="https://pn125915.nist.gov:8445/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['Qwen/Qwen3-4B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-4B-Instruct-2507", base_url="https://pn125915.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['Qwen/Qwen2.5-7B-Instruct'] = get_model(model="v_llm/Qwen/Qwen2.5-7B-Instruct", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
+    # models_dict['Qwen/Qwen3-30B-A3B-Instruct-2507'] = get_model(model="v_llm/Qwen/Qwen3-30B-A3B-Instruct-2507", base_url="https://pn131275.nist.gov:8444/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
     # models_dict['Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'] = get_model(model="v_llm/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8", base_url="https://pn131285.nist.gov:8446/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    
 
 
     # models_dict['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'] = get_model(model="v_llm/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", base_url="https://pn131275.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
-    # config_mini = GenerateConfig(max_connections=10, timeout=300)
-    # models_dict['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'] = get_model(model="v_llm/Llama-4-Maverick-17B-128E-Instruct-FP8", base_url="https://rchat.nist.gov/api", config=config_mini, api_key=os.getenv("RCHAT_API_KEY"))
+    # models_dict['meta-llama/Llama-3.3-70B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.3-70B-Instruct", base_url="https://pn131274.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
-    # models_dict['meta-llama/Llama-3.3-70B-Instruct'] = get_model(model="v_llm/meta-llama/Llama-3.3-70B-Instruct", base_url="https://pn131285.nist.gov:8443/v1", config=config, api_key=os.getenv("VLLM_API_KEY"))
 
-    # models_dict['openai/gpt-5'] = get_model(model="openai/gpt-5", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
-    # models_dict['openai/gpt-5-mini'] = get_model(model="openai/gpt-5-mini", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
-    # models_dict['openai/gpt-5-nano'] = get_model(model="openai/gpt-5-nano", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
+    models_dict['openai/gpt-5'] = get_model(model="openai/gpt-5", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
+    models_dict['openai/gpt-5-mini'] = get_model(model="openai/gpt-5-mini", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
+    models_dict['openai/gpt-5-nano'] = get_model(model="openai/gpt-5-nano", base_url="https://api.openai.com/v1", config=config, api_key=os.getenv("OPENAI_API_KEY"))
 
 
 
@@ -290,7 +289,7 @@ if __name__ == '__main__':
 
     available_models = list(models_dict.keys())
 
-    for ds in ['oe-gpt120b-afc-filtered']:
+    for ds in ['oe-gpt120b-afc-filtered', 'oe-Q235B-afc-filtered', 'oe-gpt20b-afc-filtered']:
         dataset_fldr = f"{base_dir}/{ds}"
         if not os.path.exists(dataset_fldr):
             continue
@@ -366,5 +365,5 @@ if __name__ == '__main__':
             models_list = [models_dict[model] for model in work_models]
             json_fp = available_task_names_dict[task_name]
             work_tasks = [get_task(task_name, json_fp, question_key)]
-            eval(work_tasks, model=models_list, display=disp_type, log_format='json', no_log_images=True, no_log_samples=True, log_dir=log_dir, max_connections=128) #, max_subprocesses=64) #, timeout=300)
+            eval(work_tasks, model=models_list, display=disp_type, log_format='json', no_log_images=True, no_log_samples=True, log_dir=log_dir, max_connections=8) #, max_subprocesses=64) #, timeout=300)
             

@@ -138,7 +138,7 @@ def validate_reformat_fidelity(ifp, remote:str, model:str):
 
 
 if __name__ == '__main__':
-    remote = 'pn131285:8443'
+    remote="pn131285:8447"
     model = 'gpt-oss-120b'
     # remote = 'pn131285:8446'
     # model = 'Qwen/Qwen3-235B-A22B-Instruct-2507-FP8'
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     #     print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
     #     validate_reformat_fidelity(ifp, remote, model)
 
-    for model_name in ['gpt120b']:
+    for model_name in ['gpt20b', 'gpt120b', 'Q235B']:
         ifp = f'./data-subset-500-afc/oe-{model_name}-afc/'
         print(f"Evaluating answer isomorphy features for {model} on the reformatted questions")
         validate_reformat_fidelity(ifp, remote, model)

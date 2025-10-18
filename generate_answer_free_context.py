@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--remote', type=str, default="sierra")
     parser.add_argument('--model', type=str, default="meta-llama/Llama-3.3-70B-Instruct")
     parser.add_argument('--reasoning_effort', type=str, default='high', help='reasoning effort, options: high, medium, low')
-    parser.add_argument('--connection_parallelism', type=int, default=32, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
+    parser.add_argument('--connection_parallelism', type=int, default=64, help='connection parallelism, set low for gpt-oss to try and avoid Harmony errors')
 
     args = parser.parse_args()
     print("Generating reformatted questions")
@@ -103,6 +103,12 @@ if __name__ == '__main__':
 
     # verify that each element in the dataset has the following keys: question, answer, context
     for item in dataset:
+        if 'question' in item and 'orig_question' not in item:
+            item['orig_question'] = item['question']
+            del item['question']
+        if 'answer' in item and 'orig_answer' not in item:
+            item['orig_answer'] = item['answer']
+            del item['answer']
         if 'orig_question' not in item or 'orig_answer' not in item or 'context' not in item:
             raise ValueError('each element in the dataset must have the following keys: question, answer, context')
 

@@ -56,23 +56,24 @@ def reformat_questions(dataset: list[dict], remote:str, model:str, reasoning_eff
         res = results[i]
         orig_data = dataset[i]
         if res['error'] is not None:
-            model_responses[i]['reformat_response'] = None
+            # model_responses[i]['reformat_response'] = None
             model_responses[i]['failed'] = True
             model_responses[i]['error'] = res['error']
+            model_responses[i]['reformat_response'] = res['content']
             model_responses[i]['reformat_scratchpad'] = res['scratchpad']
             model_responses[i]['prompt'] = res['prompt']
             failed_responses.append(model_responses[i])
         else:
-            model_responses[i]['reformat_response'] = res['content']
-            model_responses[i]['reformat_scratchpad'] = res['scratchpad']
+            # model_responses[i]['reformat_response'] = res['content']
+            # model_responses[i]['reformat_scratchpad'] = res['scratchpad']
             parsed = answer_parser.parse_generated_open(res['content'])
             if parsed is None:
                 model_responses[i]['failed'] = True
                 failed_responses.append(model_responses[i])
             else:
-                model_responses[i]['question'] = parsed['question']
-                model_responses[i]['answer'] = parsed['correct_answer']
-                model_responses[i]['explanation'] = parsed['explanation']
+                model_responses[i]['reformat_question'] = parsed['question']
+                model_responses[i]['reformat_answer'] = parsed['correct_answer']
+                # model_responses[i]['explanation'] = parsed['explanation']
                 model_responses[i]['orig_question'] = orig_data['question']
                 model_responses[i]['orig_answer'] = orig_data['answer']
 

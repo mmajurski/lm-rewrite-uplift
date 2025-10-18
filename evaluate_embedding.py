@@ -44,7 +44,7 @@ def eval_embeddings(base_dir: str):
         remote = models_dict[model_name]
         model = SglModelAsyncEmb(remote=remote, model=model_name, connection_parallelism=128)
 
-        for ds in ['oe-Q235B-filtered', 'oe-gpt120b-filtered']:
+        for ds in ['oe-Q235B-filtered', 'oe-gpt120b-filtered', 'oe-gpt20b-filtered', 'oe-Q235B-afc-filtered', 'oe-gpt120b-afc-filtered', 'oe-gpt20b-afc-filtered']:
             dataset_fldr = os.path.join(base_dir, ds)
             if not os.path.exists(dataset_fldr):
                 continue
@@ -142,6 +142,8 @@ def eval_embeddings(base_dir: str):
 
 if __name__ == '__main__':
 
-    # eval_embeddings('./data-subset-500')
-    # eval_embeddings('./data-post-cutoff')
+    eval_embeddings('./data-subset-500')
+    eval_embeddings('./data-post-cutoff')
     eval_embeddings('./data-subset-500-SU')
+    eval_embeddings('./data-subset-500-afc')
+    eval_embeddings('./data-post-cutoff-afc')
