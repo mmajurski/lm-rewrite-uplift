@@ -78,11 +78,11 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                 context_type = 'orig'
                 context_str = ""
             
-            question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-{question_source}')
+            base_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-{question_source}')
             giveaway_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-{question_source}-giveaway')
 
-            if os.path.exists(question_folder):
-                ref_logs = [fn for fn in os.listdir(question_folder) if fn.endswith('.json')]
+            if os.path.exists(base_question_folder):
+                ref_logs = [fn for fn in os.listdir(base_question_folder) if fn.endswith('.json')]
             else:
                 ref_logs = []
             if os.path.exists(giveaway_question_folder):
@@ -101,7 +101,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             for log_type in ['ref', 'giveaway']:
                 if log_type == 'ref':
                     logs = ref_logs
-                    question_folder = question_folder
+                    question_folder = base_question_folder
                 else:
                     logs = giveaway_logs
                     question_folder = giveaway_question_folder
@@ -117,7 +117,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
-                    d_fp = d_fp.replace('mmajursk','mmajurski')
+                    # d_fp = d_fp.replace('mmajursk','mmajurski')
+                    d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -274,6 +275,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             plt.close()
 
             print(f"Scatterplots saved for {len(all_models)} models")
+            print(f"   fp = ./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")
 
 
 

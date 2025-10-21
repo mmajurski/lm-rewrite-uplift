@@ -20,7 +20,7 @@ nvidia-smi
 # vllm serve openai/gpt-oss-120b --port 18444 #--tensor-parallel-size 1
 
 #VLLM_DISABLE_COMPILE_CACHE=1 
-vllm serve openai/gpt-oss-120b --port 18443 --served-model-name gpt-oss-120b --max-model-len 72000 --tensor-parallel-size 4 --async-scheduling
+vllm serve openai/gpt-oss-120b --port 18443 --served-model-name gpt-oss-120b --max-model-len 64000 --tensor-parallel-size 4 --async-scheduling
 #--task=embedding
 
 

@@ -2,7 +2,8 @@
 
 % Change "review" to "final" to generate the final (sometimes called camera-ready) version.
 % Change to "preprint" to generate a non-anonymous version with page numbers.
-\usepackage[review]{acl}
+\usepackage[preprint]{acl}
+
 
 % Standard package includes
 \usepackage{times}
@@ -171,8 +172,11 @@ showstringspaces=false,tabsize=2,breaklines=true}
 
 %\title{Evaluating LM Accuracy Uplift From Rewriting Questions to Remove Ambiguities}
 %\title{Evaluating LM Accuracy Uplift: Using Answer Free Context to Double gpt-oss-20b Performance on a subset of HLE}
-\title{LM Accuracy Uplift: Using Answer-Free Context Information to Double gpt-oss-20b Performance on a subset of HLE}
+\title{Evaluating LM Accuracy Uplift: Extracting Twice the Performance on Humanities Last Exam Using Answer-Free Context}
+%\title{Evaluating LM Context Uplift: Doubling HLE Benchmark Performance Using Answer-Free Context}
+%\title{LM Accuracy Uplift: Using Answer-Free Context Information to Double gpt-oss-20b Performance on a subset of HLE}
 %\title{Squeezing All Improvement From Your Context: QA Accuracy Uplift Even When the Context Doens't Surface the Answer}
+
 
 
 \author{%
@@ -189,19 +193,23 @@ showstringspaces=false,tabsize=2,breaklines=true}
 \begin{document}
 
 \maketitle
+% gpt-5-mini on HLE rewrite using gpt-oss-120b
+% orig = 0.073
+% rewrite = 0.439
 
+% gpt-5-mini on HLE rewrite using gpt-oss-20b
+% orig = 0.139
+% rewrite = 0.372
 
 \begin{abstract}
-Language Models (LMs) continue to advance, improving capability, response quality, and coherence. 
-Given Internet-scale training datasets, LMs have likely encountered much of what users may ask them to generate in some form during their training. 
-A plethora of evaluation benchmarks have been constructed to assess model quality, response appropriateness, and reasoning capabilities. 
-However, the human effort required for benchmark construction is rapidly being outpaced by the size and scope of the models under evaluation.
-Having humans build a benchmark for every possible domain of interest is impractical.
-Therefore, we propose a methodology for automating the construction of fact-based synthetic data model evaluations grounded in document populations.
-This work leverages the same LMs to evaluate domain-specific knowledge automatically, using only grounding documents (e.g., a textbook) as input.
-This synthetic data benchmarking approach corresponds well with human curated questions producing an ensemble Spearman ranking correlation of $0.91$ and a benchmark evaluation Pearson accuracy correlation of $0.74$ (model specific $0.82$).
-This novel approach supports generating both multiple choice and open-ended synthetic data questions to gain diagnostic insight of LM capability.
-We apply this methodology to evaluate model performance on three recent documents (two post LM knowledge cutoff), discovering a surprisingly strong performance from Gemma-3 models on open-ended questions.
+How eloquently, clearly, and unambiguously one poses a question has a stark impact on the quality of answer.
+This concept holds for knowledge questions posed to Language Models (LMs). 
+LMs continue to advance and a plethora of benchmarks have been developed (at great expense) to assess model capability. 
+This work studies the interplay between background grounding information presented to the LM in context with question quality and ambiguity.
+We fine that combining well grounded dynamic context construction (i.e. RAG) with query rewriting to reduce ambiguity results in significantly improved model accuracy.
+Specifically, given a user question with associated grounding context that does not contain the answer, benchmark accuracy uplift is significant, even compared to just prepending that context before the question.
+Using \texttt{gpt-oss-20b} to rewrite a subset of Humanities Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
+This uplift in accuracy cannot be fully recovered just through prompting at question evaluation time, separate rewriting and answering phases are required.
 % TODO fill in before final camera ready
 %	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
 \end{abstract}
@@ -210,101 +218,97 @@ We apply this methodology to evaluate model performance on three recent document
 
 \section{Introduction}
 
+
+
+
+%Intro to reword:
+%Users often implicitly assume that an LLM shares their mental model, including their background knowledge, context, and intent. This leads them to omit critical information when formulating a query, believing it to be self-evident. The LLM, however, operates on the statistical patterns in its training data and the explicit text of the prompt. When faced with an underspecified query, it must make an assumption to generate a response. If the model's chosen assumption does not align with the user's unstated intent, the resulting answer—while potentially factually correct under that assumed interpretation—will be perceived by the user as incorrect, irrelevant, or even as a "hallucination".
+
+The ongoing explosion of Language Model (LM) capability is largely a consequence of scaling laws, which have demonstrated a relationships between performance and parameter count, dataset size, and compute. 
+This capability growth has opened a widening chasm between what modern LMs can do and how we measure their abilities.
+Static benchmarking is a brittle Gold Standard.
+Leaderboard style benchmarks have been the primary engine of progress in machine learning, providing an objective scalable way to measure and compare capabilities. 
+%However, their static nature has become their greatest vulnerability. 
+%In the current ecosystem of web-scale data and intense competitive pressure, these benchmarks are proving to be a brittle and increasingly unreliable standard, suffering from a host of interconnected failure modes that distort our understanding of AI progress.
 \begin{figure}[t!]
 	%	\vspace*{-1.0em}
 	\centering
-	\includegraphics[width=1.0\columnwidth]{figs/fig1.jpg}
-	\vspace{-1.5em}
-	\caption{lifehas3rules
-		Synthetic evaluation pipeline: (1) users curate grounding documents, (2) LMs generate domain-specific questions, (3) model responses are evaluated. }
-	\label{fig:evaluation-framework}
+	\includegraphics[width=0.9\columnwidth]{figs/fig1.jpg}
+	\vspace{-0.5em}
+	\caption{When RAG systems surface relevant information but not the answer, LM performance can be enhanced by disambiguating the question using context.}
+	\label{fig:figure1}
 	\vspace{-1em}   
 \end{figure}
-
-
 \begin{figure}[b!]
 	\vspace*{-1.0em}
 	\centering
-	\includegraphics[width=1.0\columnwidth]{figs/gpt120b-afc_hle.pdf}
-	\vspace{-1.5em}
-	\caption{Humanities Last Exam (HLE) benchmark evaluation accuracy using the original reference questions (x-axis) compared to the reformated generated by model ensemble demonstrating reasonable correlation between human and synthetic evaluation}
-	\label{fig:hle-ref-vs-reformat}
-%	\vspace{-1em}   
+	\includegraphics[width=0.8\columnwidth]{figs/gpt20b-afc_hle.pdf}
+	\vspace{-0.5em}
+	\caption{Rewriting questions 
+		%using \texttt{gpt-oss-20b} 
+		using answer-free grounding context yields significant accuracy improvement over the original questions as evaluated on a subset of Humanities Last Exam (HLE).
+		%Questions rewritten by gpt-oss-20b using answer-free grounding context information demonstrate significant benchmark accuracy improvement over the original questions as evaluated on a subset of Humanities Last Exam (HLE) where validated context information is available. 
+		}
+	\label{fig:hle-uplift}
+	%	\vspace{-1em}   
 \end{figure}
-
-The ongoing explosion of Language Model (LM) capability is largely a consequence of scaling laws, which have demonstrated a relationships between performance and parameter count, dataset size, and compute. 
-%The rise of large models resulted in emergent capabilities such as few-shot and in-context learning.
-This growth has opened a widening chasm between what modern LMs can do and how we measure their abilities.
-Specifically, with AI systems targeting professional workflows, new types of evaluation is required to characterize LM capability when grounded in document populations.
-LMs possess considerable general knowledge; but are inherently weaker with domain-specific and proprietary information. 
+LMs undeniably possess considerable general knowledge; but are inherently weaker with domain-specific and proprietary information. 
+Specifically, with AI systems targeting professional workflows, new types of evaluation are required to characterize LM capability grounded in document populations.
 For enterprise applications with internal corporate knowledge management the generalized information contained within a pre-trained LM is insufficient. 
 These domains require access to private, specialized, and often confidential data that is not part of any public training corpus. 
-The current approach to solving this involve retrieval systems which dynamically fetch relevant context for the LM~\cite{NEURIPS2024_db93ccb6}.
-Evaluation of RAG systems focuses heavily on ranking quality and retrieval performance~\cite{yang2024crag,NEURIPS2024_27245589}.
+Current solution approachs involve retrieval systems which dynamically construct context for the LM based upon user queries~\cite{NEURIPS2024_db93ccb6}.
+Ongoing evaluation of RAG systems focuses heavily on ranking quality and retrieval performance~\cite{yang2024crag,NEURIPS2024_27245589} with less focus on how to best utilize the retrieved information.
+% TODO shorten this intro to the problem considerably. Ideally like 2 brief sentences supporting the figure
+LM performance evaluation is accurate if RAG surfaces the correct answer, but if it only retrieves relevant information (without the answer), performance suffers. 
+Figure~\ref{fig:figure1} outlines our methodology for extracting both additional benchmark accuracy and improved grounding via question disambiguation rewrite using answer-free context information.
+Figure~\ref{fig:hle-uplift} demonstrates the improvement this method provides on a subset of Humanities Last Exam with validated grounding context, showing \texttt{gpt-5-mini} improving from an accuracy of 0.14 on the original questions to 0.37 on the rewritten questions.
 
-
-
-\begin{figure}[h!]
-	\vspace*{-1.0em}
+To highlight the core problem this paper addresses, Figure~\ref{fig:impact-of-context} highlights the impact of context on LM benchmark performance (across all datasets used in this study). 
+Asking \texttt{gpt-oss-120b} a question without any supporting context produces mixed results as your relying on the model weight knowledge (blue).
+\texttt{Question+Context} (red), with supporting context containing the desired answer performs well.
+Answer-Free Context (\texttt{AFC}) is background grounding information relevant to the question but which does not contain the answer. 
+LM performance under \texttt{Question+AFC} (green) cannot match the context supported accuracy.
+\begin{figure}[t!]
+	\vspace*{-1.5em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
+	\includegraphics[width=0.75\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
 	\vspace{-0.8em}
-	\caption{The context information presented to the LM answering questions has a drastic impact on performance. When RAG-type systems correctly surface context with the answer accuracy is high (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), the benchmark performance suffers.}
+	\caption{The quality of context information presented to the LM
+		%(\texttt{gpt-oss-120b}) 
+		has a drastic impact on performance.
+		%Reliable accuracy requires the context contain the answer.
+		}
+%	\caption{The quality of context information presented to the question answering LM has a drastic impact on system performance. Accuracy is high when RAG systems correctly surface context with the answer (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), benchmark performance suffers.}
 	\label{fig:impact-of-context}
-	\vspace{-1em}   
+	\vspace{-1.0em}   
 \end{figure}
+However, as shown in Figure~\ref{fig:hle-uplift}, using \texttt{AFC} to rewrite the question can both disambiguate what is being asked and fill in relevant background assumptions, producing significant accuracy gains. 
+This increase in performance does not rely on model weight knowledge (gpt-oss-20b is an adequate rewriter).
+Additionally, just prepending the \texttt{AFC} text before the question does not produce an equivalent accuracy uplift.  % TODO see fig....
+The act of interpretation during rewriting to clarify and disambiguate the question separately from attempting to answer it causes the uplift effect. 
+\begin{figure}[t!]
+	\vspace*{-1.5em}
+	\centering
+	\includegraphics[width=0.75\columnwidth]{figs/qAFC_vs_RQ_gpt120b.pdf}
+	\vspace{-0.8em}
+	\caption{The rewritten question outperforms simply prepending the relevant context used to disambiguate.}
+	\label{fig:impact-of-rewrite}
+	\vspace{-1.0em}   
+\end{figure}
+% TODO include references to later results showing that Question + AFC does not produce uplift. Just talk to the lack of uplift in the resutls section
+An intuition behind this result is asking a student to restate the question before answering it.
+The act of puzzling through what is being asked enhances understanding of how to correctly answer the question.
+% TODO run a benchmark evaluation using AFC where the model isn't just asked to answer the question, its first prompted to disambiguate (using a similar prompt to the rewriting) and then provide the final answer. This will test combining the two steps together.  Include an appendix? result with the plots showing how this works
 
 
 
 
-This report argues that this reactive stance is no longer sustainable. Static benchmarks, the dominant methodology for quantitative assessment, are now fundamentally compromised. They are plagued by systemic issues of data contamination, saturation, and an inherent brittleness that fails to capture the true generalization capabilities of state-of-the-art models. The intense focus on optimizing for these flawed measures has created a disconnect between leaderboard performance and real-world utility, pushing the field toward a state of illusory progress. This crisis, however, is not merely a sign of failure but also one of scientific maturation. The widespread recognition of these limitations is forcing the research community to move beyond simplistic, static metrics and grapple with more profound questions about the nature of intelligence, reasoning, and trustworthiness. It marks a necessary transition from measuring performance on fixed tasks to assessing the robustness of the underlying reasoning processes.
-
-Static benchmarking is a brittle Gold Standard. For years, static, leader-board-driven benchmarks have been the primary engine of progress in machine learning, providing a seemingly objective and scalable way to measure and compare model capabilities. However, their static nature has become their greatest vulnerability. In the current ecosystem of web-scale data and intense competitive pressure, these benchmarks are proving to be a brittle and increasingly unreliable standard, suffering from a host of interconnected failure modes that distort our understanding of AI progress.
-
-
-
-
-Structural Fragility: Sensitivity to Perturbations and Heuristic Learning
-Beyond contamination and saturation, a growing body of evidence reveals a deeper, more fundamental problem: LLMs often achieve high benchmark scores not by learning robust, generalizable problem-solving procedures, but by mastering "superficial heuristics" tied to the specific presentation and structure of the training and evaluation data. This results in a profound structural fragility, where model performance can collapse in response to trivial, semantically irrelevant changes to the input.   
-
-
-A primary cause of benchmark decay is the public and static nature of the test data. A powerful solution to this problem is to generate new, unique benchmarks on-demand from a trusted corpus of documents. This approach, exemplified by frameworks like YourBench [shashidhar2025yourbench], fundamentally alters the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
-
-This paradigm empowers users to move beyond generic, one-size-fits-all benchmarks and create evaluations tailored to their specific needs. A law firm can generate a benchmark from its case files, a pharmaceutical company can test a model's knowledge of its latest research papers, and a software company can evaluate a model's ability to understand its proprietary codebase. This allows for a much more accurate assessment of a model's utility for a specific application.
-
-Furthermore, this approach directly addresses the problem of knowledge cut-offs. To rigorously test a model's ability to reason over new information rather than relying on its outdated parametric knowledge, the YourBench framework was developed alongside Tempora-0325, a novel dataset comprising over 7,000 documents published exclusively after March 2025. By generating questions from this dataset, evaluators can ensure they are testing a model's real-time comprehension and synthesis abilities.   
-
-The Critical Role of Full-Document Grounding.
-A central tenet of this approach is that the generated benchmarks must be grounded in the provided source documents. This means that each question must be verifiably answerable using only the information contained in the source text, often enforced through automated citation validation checks. This grounding is critical because it shifts the object of evaluation from "what the model knows" (parametric knowledge) to "how the model reasons" over a given context. This is particularly relevant for evaluating Retrieval-Augmented Generation (RAG) systems, where the goal is to ensure the model's responses are faithful to the retrieved information and not prone to hallucination.   
-
-However, evaluating these document-grounded systems presents its own challenges. LLM-generated responses in this setting are often significantly more verbose and conversational than the concise, human-authored reference answers found in traditional datasets. This verbosity causes traditional lexical-overlap metrics like ROUGE and BLEU to fail, assigning unfairly low scores to responses that humans might judge as high-quality and appropriate. This highlights a recurring theme: as models become more human-like in their outputs, evaluation methodologies must increasingly rely on semantic understanding and human-like judgment, whether from actual humans or carefully calibrated LLM judges.   
-
-Benchmark-free methods like TreeEval [li2025treeeval] offer a compelling vision for this adaptive future. In this paradigm, there is no pre-existing set of questions. Instead, a powerful "examiner" LLM is tasked with evaluating a target model on a given topic. The examiner begins by generating an initial question. Based on the target model's response, the examiner then dynamically generates follow-up questions, creating a branching tree of inquiry.   Additionally, this examiner approach can leverage the dynamic context driven ideas of yourbench to ground the evaluation in information sources the model under evaluation does not have access to, enhancing the evaluation asymmetry. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Accuracy uplift is identical between questions rewritten using afc, and using the original questions with the afc pre-pended to the model query. So the question is, why bother with the rewrite. The context + question paradigm is identical to RAG applications. So in the limit, we are just demonstrating that you can compress the context value into the question itself. 
+% TODO setup the dictionary for texstudio so that it can do spell check
 
 %TODO: 
 %- characterize the change in question length from orig to rewrite. I.e. how many tokens are being added to disambiguate. 
 %- rerun the gpt-oss-120b hle to fix the 4\% orig accuracy
 %- measure the alignment and utility of the context (orig and afc) w.r.t. the question. I.e. does the improvement in answer accuracy correlate with the context utility? i.e. does the reduction in accuracy from orig+giveaway (below the trendline) stem from useless information being included? I.e. would the post-cutoff trend above the trendline return if we only considered those questions where the context paragraph has known utility?
-%- 
-
-
-
-
 
 
 % Topics: 
@@ -316,175 +320,240 @@ Accuracy uplift is identical between questions rewritten using afc, and using th
 %- Use case: compliment RAG system where system queries are restated back to the user in modified form after using the RAG data.
 
 
-% HLE subset
-% gpt-oss-20b: from 0.16 to 0.28
-% gpt-oss-120b: from 0.05 to 0.30
-% gpt-5-mini: from 0.09 to 0.28
-% gpt-5: from 0.33 to 0.53
+\section{Related Works}
+
+
+% TODO find related literature defending and characterizing the accuracy improvements of RAG. I.e. Whats the accuracy uplift of RAG when the system surfaces: 1) relevant answer containing info, 2) relevant background but no answer, 3) irrelavant text, 4) no context
+
+
+% TODO talk in related works about the disconnect between HLE type benchmarks where the model just has to answer, and when tool use (i.e. internet) is available. In modern RAG finding and surfacing relevant and on topic informatino about the question can provide significant alpha. But that requires shifrting the evaluation target from a Model (+tools) to the Model+RAG dynamic context engine system. That second more complex system with grounding documents is much harder to evaluate than an LM in isolation. 
 
 
 
 
 
-%Intro to reword:
-%Users often implicitly assume that an LLM shares their mental model, including their background knowledge, context, and intent. This leads them to omit critical information when formulating a query, believing it to be self-evident. The LLM, however, operates on the statistical patterns in its training data and the explicit text of the prompt. When faced with an underspecified query, it must make an assumption to generate a response. If the model's chosen assumption does not align with the user's unstated intent, the resulting answer—while potentially factually correct under that assumed interpretation—will be perceived by the user as incorrect, irrelevant, or even as a "hallucination".
+A primary cause of benchmark utility decay is the public and static nature of the test data. 
+Shifting to dynamic generative benchmarking constructed on-demand from trusted document corpora is one solution.
+This approach, exemplified by \cite{majurski2025generative,shashidhar2025yourbench,li2025autobencherdeclarativebenchmarkconstruction}, extends the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
+An obvious conceptual extension moves from hand selected documents to enterprise information systems.
+However, that raises the spectre of complexity, with the evaluation system needing to be conditioned upon not just the model and documents, but also on the retrieval system being leveraged.
+Therefore, in extending benchmarking into a generative space grounded in documents, evaluations need to take into account the end-to-end information system, RAG included.
+An open question is how to best incorporate the retrieval evaluation components into the overall scoring. 
+% TODO maybe cut the above down? I am not sure I want to open the RAG evaluation and verification can of worms.
+
+%This paradigm empowers users to move beyond generic, one-size-fits-all benchmarks and create evaluations tailored to their specific needs; enabling  more accurate assessment of a model's utility for specific applications.
+%For example, a law firm can generate a benchmark from its case files, a pharmaceutical company can test a model's knowledge of its latest research papers, and a software company can evaluate a model's ability to understand its proprietary codebase. 
+% TODO include related works about characterizing and evalating RAG retrieval performance, and the benchmarks around those systems. As they impact the downstream results of any more complex system and this accuracy uplift work directly speaks to the system level impacts of dynamic context.
+A central tenet of this generative evaluation approach is benchmarks must be grounded in the provided source documents. 
+This means that each question should be verifiably answerable using only the information contained in the source text. 
+This grounding is critical because it shifts the object of evaluation from "what the model knows" (parametric knowledge) to "how the model reasons" over a given context. 
+Combined with varying levels of compute budget, benchmark-free methods like TreeEval~\cite{li2025treeeval} might serve dynamic context construction LM evaluation well, enabling an adaptive powerful "examiner" LM tasked with probing the target model for weaknesses given a topic. 
+TreeEval starts by generating initial questions, then dynamically generating follow up based on the initial response building a tree of inquiry, potentially using information sources the model under evaluation does not have access to, enhancing the evaluation asymmetry. 
+This combines the generative benchmarking with the document grounding that is critically important to these next-gen LM system evaluation approachs. 
+
+% TODO other related works? This is currently incredibly thin
 
 
 
-\section{Related works}
-
-
-The evaluation of large language models (LLMs) is confronting a crisis of methodology, as the static benchmarks that once drove progress are now proving to be fundamentally unreliable. 
-A primary challenge is data contamination, where public benchmark datasets are inevitably absorbed into the web-scale corpora used for training subsequent models, leading to inflated scores that reflect memorization rather than true generalization. 
-This issue is compounded by benchmark saturation, where top models achieve near-perfect scores, rendering the tests incapable of differentiating between state-of-the-art systems. 
-The intense focus on leaderboards has also triggered Goodhart's Law, where the metric becomes the target, incentivizing developers to "overtune" models to exploit benchmark artifacts instead of pursuing genuine, robust capabilities. 
-Furthermore, these models exhibit a profound structural fragility, with performance collapsing in response to semantically irrelevant changes like rephrasing questions or reordering multiple-choice options, indicating a failure to learn underlying problem structures.   
-
-In response to these failings, the research community has shifted towards synthetic and dynamic evaluation paradigms. 
-Early Question-Answer Generation (QAG) methods focused on creating questions from a given context and answer, often by fine-tuning smaller models for the task \cite{alberti2019synthetic, eo2023towards, shinoda2020improving, ushio2023empirical, yuan2022selecting, zhou2024qog}. 
-With the rise of powerful general-purpose LLMs, newer approaches began prompting models to generate evaluation questions directly from their internal knowledge to mitigate data leakage \cite{bai2023benchmarking, perez2022discoveringlanguagemodelbehaviors, tan-etal-2024-large, zhang2022tag}. 
-This has culminated in the development of dynamic, adversarial frameworks where an examiner LLM interacts with the model under evaluation. 
-These systems, such as TreeEval, create an "irreproducible evaluation session" by adaptively generating follow-up questions based on the model's responses, making it impossible to "study for the test" and enabling a more authentic assessment of on-the-fly reasoning \cite{bai2023benchmarking, li2025treeeval}.
-
-A crucial advancement in synthetic benchmark generation is the principle of grounding, which connects the evaluation to a trusted, external corpus of documents. 
-By requiring that all questions be verifiably answerable from the provided source material, grounding shifts the assessment from what a model has memorized (parametric knowledge) to how it reasons over a given context. 
-This approach is exemplified by modern frameworks like YourBench, which can synthetically replicate benchmarks like MMLU from a small set of source documents, and AutoBencher, which uses privileged information to discover knowledge gaps \cite{li2025autobencherdeclarativebenchmarkconstruction, shashidhar2025yourbench}. 
-This methodology is not new, with earlier benchmarks like SecQA and PubMedQA also being grounded in domain-specific texts \cite{jin2019pubmedqa, liu2023secqa}. 
-As modern long-context models can now process entire documents, full-document grounding has proven superior to earlier summary-based techniques, further enhancing the quality and reliability of the generated evaluations \cite{bhat2023investigating}. 
-Ultimately, grounding improves the utility of synthetic data by ensuring that the evaluation is novel, domain-specific, and a true test of reasoning rather than recall.
-
-
-Grounding Large Language Models (LLMs) with external documents via Retrieval-Augmented Generation (RAG) has become a primary strategy for mitigating factual inaccuracies and knowledge cutoffs. However, building and evaluating these systems presents significant challenges, foremost among them being the dependency on retrieval quality. The principle of "garbage in, garbage out" dictates that the entire system's performance is fundamentally limited by the retriever's ability to surface relevant, accurate, and complete information. Research has identified numerous failure points within this retrieval stage, including cases where the correct information exists in the knowledge base but is not ranked highly enough to be included in the context, or where the information is missing from the source entirely. This retrieval bottleneck is compounded by the inherent complexity of the RAG pipeline, which involves a series of interdependent components—from data ingestion and chunking strategies to the choice of retrieval algorithm (e.g., dense, sparse, or hybrid search)—each requiring careful tuning and maintenance.   
-
-Beyond the initial retrieval, significant challenges persist in how the LLM utilizes the provided context. Even when relevant documents are successfully retrieved, their effectiveness can be undermined by the "lost in the middle" problem, a phenomenon where LLMs exhibit a strong bias towards information at the beginning and end of a long context window, effectively ignoring relevant facts buried in the middle. This issue, rooted in the transformer architecture's positional biases and attention dilution, challenges the naive assumption that providing more context is always beneficial. Furthermore, deploying RAG systems introduces systemic hurdles such as increased latency and computational cost compared to standalone LLM calls, creating practical trade-offs between response quality, speed, and expense in production environments. These systems also struggle with complex, multi-hop questions that require synthesizing information from multiple documents, a task for which a single retrieval pass is often insufficient.   
-
-Addressing these multifaceted challenges requires robust evaluation methodologies. The research community has largely adopted a bifurcated approach, assessing the retrieval and generation components of RAG systems independently to better diagnose failures. Retrieval quality is typically measured using classic information retrieval metrics like Mean Reciprocal Rank (MRR) and Normalized Discounted Cumulative Gain (NDCG). The quality of the final generated response is evaluated on dimensions such as faithfulness (whether the answer is supported by the context) and relevance to the query, often using another powerful LLM as an automated judge. To standardize these evaluations, a number of key benchmarks have been established in related works, including Natural Questions (NQ) for open-domain question answering, HotpotQA for multi-hop reasoning, and more recent, specialized benchmarks like LaRA, which compares RAG with long-context models, and mmRAG for multi-modal retrieval. The development of comprehensive evaluation frameworks such as Auepora and BERGEN further signals a push towards more reproducible and systematic analysis of RAG performance across its many configurations.
+%The evaluation of large language models (LLMs) is confronting a crisis of methodology, as the static benchmarks that once drove progress are now proving to be fundamentally unreliable.  A primary challenge is data contamination, where public benchmark datasets are inevitably absorbed into the web-scale corpora used for training subsequent models, leading to inflated scores that reflect memorization rather than true generalization. 
+%This issue is compounded by benchmark saturation, where top models achieve near-perfect scores, rendering the tests incapable of differentiating between state-of-the-art systems.  The intense focus on leaderboards has also triggered Goodhart's Law, where the metric becomes the target, incentivizing developers to "overtune" models to exploit benchmark artifacts instead of pursuing genuine, robust capabilities.  Furthermore, these models exhibit a profound structural fragility, with performance collapsing in response to semantically irrelevant changes like rephrasing questions or reordering multiple-choice options, indicating a failure to learn underlying problem structures.   
+%
+%In response to these failings, the research community has shifted towards generative and dynamic evaluation paradigms. 
+%This has culminated in the development of dynamic, adversarial frameworks where an examiner LLM interacts with the model under evaluation. 
+%These systems, such as TreeEval, create an "irreproducible evaluation session" by adaptively generating follow-up questions based on the model's responses, making it impossible to "study for the test" and enabling a more authentic assessment of on-the-fly reasoning \cite{bai2023benchmarking, li2025treeeval}.
+%
+%A crucial advancement in synthetic benchmark generation is the principle of grounding, which connects the evaluation to a trusted, external corpus of documents.  By requiring that all questions be verifiably answerable from the provided source material, grounding shifts the assessment from what a model has memorized (parametric knowledge) to how it reasons over a given context.  This approach is exemplified by modern frameworks like YourBench, which can synthetically replicate benchmarks like MMLU from a small set of source documents, and AutoBencher, which uses privileged information to discover knowledge gaps \cite{li2025autobencherdeclarativebenchmarkconstruction, shashidhar2025yourbench}. 
+%This methodology is not new, with earlier benchmarks like SecQA and PubMedQA also being grounded in domain-specific texts \cite{jin2019pubmedqa, liu2023secqa}.  As modern long-context models can now process entire documents, full-document grounding has proven superior to earlier summary-based techniques, further enhancing the quality and reliability of the generated evaluations \cite{bhat2023investigating}. 
+%Ultimately, grounding improves the utility of synthetic data by ensuring that the evaluation is novel, domain-specific, and a true test of reasoning rather than recall.
+%
+%Grounding Large Language Models (LLMs) with external documents via Retrieval-Augmented Generation (RAG) has become a primary strategy for mitigating factual inaccuracies and knowledge cutoffs. However, building and evaluating these systems presents significant challenges, foremost among them being the dependency on retrieval quality. The principle of "garbage in, garbage out" dictates that the entire system's performance is fundamentally limited by the retriever's ability to surface relevant, accurate, and complete information. Research has identified numerous failure points within this retrieval stage, including cases where the correct information exists in the knowledge base but is not ranked highly enough to be included in the context, or where the information is missing from the source entirely. This retrieval bottleneck is compounded by the inherent complexity of the RAG pipeline, which involves a series of interdependent components—from data ingestion and chunking strategies to the choice of retrieval algorithm (e.g., dense, sparse, or hybrid search)—each requiring careful tuning and maintenance.   
+%
+%Beyond the initial retrieval, significant challenges persist in how the LLM utilizes the provided context. Even when relevant documents are successfully retrieved, their effectiveness can be undermined by the "lost in the middle" problem, a phenomenon where LLMs exhibit a strong bias towards information at the beginning and end of a long context window, effectively ignoring relevant facts buried in the middle. This issue, rooted in the transformer architecture's positional biases and attention dilution, challenges the naive assumption that providing more context is always beneficial. Furthermore, deploying RAG systems introduces systemic hurdles such as increased latency and computational cost compared to standalone LLM calls, creating practical trade-offs between response quality, speed, and expense in production environments. These systems also struggle with complex, multi-hop questions that require synthesizing information from multiple documents, a task for which a single retrieval pass is often insufficient.   
+%
+%Addressing these multifaceted challenges requires robust evaluation methodologies. The research community has largely adopted a bifurcated approach, assessing the retrieval and generation components of RAG systems independently to better diagnose failures. Retrieval quality is typically measured using classic information retrieval metrics like Mean Reciprocal Rank (MRR) and Normalized Discounted Cumulative Gain (NDCG). The quality of the final generated response is evaluated on dimensions such as faithfulness (whether the answer is supported by the context) and relevance to the query, often using another powerful LLM as an automated judge. To standardize these evaluations, a number of key benchmarks have been established in related works, including Natural Questions (NQ) for open-domain question answering, HotpotQA for multi-hop reasoning, and more recent, specialized benchmarks like LaRA, which compares RAG with long-context models, and mmRAG for multi-modal retrieval. The development of comprehensive evaluation frameworks such as Auepora and BERGEN further signals a push towards more reproducible and systematic analysis of RAG performance across its many configurations.
 
 
 \section{Methods}
+
+This work explores the impact context can have of informational questions being asked of LM systems. 
+Prior work in the field demonstrated a correlation between generative benchmarking question length and model performance~\cite{majurski2025generative}.
+This indicated that longer and more detailed questions put the LM under evaluation in the right "state of mind" to answer the question better.
+This work explores that trend and characterizes how well that effect generalizes, and provides some thoughts on why the effect happens. 
+
+\subsection{Datasets \& Models}
+
+To explore the impact of question detail on LM benchmark performance, we need pairs of questions with associated context that provides the correct answer.
+While most RAG systems are designed to produce that type of overall system, reference data like that is in short supply. 
+Additionally, datasets from post model knowledge cutoff enables evaluating whether the observed effects stem from memorization/recall within the model weights, or whether the quesiton disambiguation approach generatlizes to new knowledge. 
+
+The following datasets were used:
+% majurski2025generative,shashidhar2025yourbench
+% Grounding Synthetic Evaluations
+\begin{table}[h!]
+	\centering
+	\caption{Dataset Publication Dates}
+	\footnotesize
+	\label{tab:dataset_publication_cutoff}
+		\vspace{-1em}   
+	
+	\begin{tabular}{p{5.5cm} p{1.25cm}}
+	\toprule
+		\textbf{Dataset} & \textbf{Release Date}  \\
+		Public Datasets & \\
+\toprule
+		Humanities Last Exam~\cite{HumanityLastExam} & Jan 2025\\
+		\hline
+		Squadv2~\cite{DBLP:journals/corr/abs-1806-03822} & 2018 \\
+		\hline
+		HotpotQA~\cite{yang2018hotpotqa} & 2018 \\
+		\hline
+		TrivaQA-web~\cite{2017arXivtriviaqa} & 2017 \\
+		\hline
+		NaturalQuestionsShort~\cite{kwiatkowski2019natural} & 2019 \\
+		\hline
+		PubMedQA~\cite{jin2019pubmedqa} & 2019 \\
+		\hline
+		BoolQ~\cite{clark2019boolq} & 2019 \\
+		\hline
+		FermiQA~\cite{kalyan2021much} & 2021 \\
+		\hline
+		MS-MARCO-QA~\cite{bajaj2016ms} & 2016 \\
+		\hline
+		MusiqueQA~\cite{trivedi2022musique} & 2022 \\
+		\hline
+		2WikiMultiHopQA~\cite{ho2020constructing} & 2020 \\
+\bottomrule
+		\vspace{0.1em}   
+		Generative Benchmarks (constructed by Grounding Synthetic Evaluations~\cite{majurski2025generative}) & \\
+		\toprule
+		arXiv\_2502\_17521v1~\cite{chen2025recent} & 2025 \\
+		\hline
+		America's AI Action Plan~\cite{AiPlan} & 2025 \\
+\bottomrule
+		\vspace{0.1em}   
+		Generative Benchmarks (constructed by YourBench~\cite{shashidhar2025yourbench}) & \\
+	\toprule
+		arXiv\_2502\_17521v1~\cite{chen2025recent} & 2025 \\
+		\hline
+		America's AI Action Plan~\cite{AiPlan} & 2025 \\
+\bottomrule
+	\end{tabular}
+	\vspace{-1em} 
+\end{table}
+
+% HLE data sourceing https://www.futurehouse.org/research-announcements/hle-exam
+% Verified? HLE dataset https://huggingface.co/datasets/futurehouse/hle-gold-bio-chem
 
 
 
 \section{Evaluation methodology}
 
 
-\subsection{Datasets}
+
 Evaluating the validity of generated synthetic questions requires source documents which have human annotated question/answer pairs to compare against. 
-The following NLP datasets were evaluated:
-\begin{enumerate*}[label=(\alph*)]
-	\item Squadv2~\cite{DBLP:journals/corr/abs-1806-03822}
-	\item HotpotQA~\cite{yang2018hotpotqa}
-	\item TrivaQA-web~\cite{2017arXivtriviaqa}
-	\item NaturalQuestionsShort~\cite{kwiatkowski2019natural}
-	\item PubMedQA~\cite{jin2019pubmedqa}
-	\item BoolQ~\cite{clark2019boolq}
-	\item FermiQA~\cite{kalyan2021much}
-	\item MS-MARCO-QA~\cite{bajaj2016ms}
-	\item MusiqueQA~\cite{trivedi2022musique}, and
-	\item 2WikiMultiHopQA~\cite{ho2020constructing}.
-\end{enumerate*}
+
 
 % TODO Verify all this AI gen information
-%\begin{table}[h!]
-\begin{table*}[t]
-\centering
-\caption{Comprehensive Knowledge Cutoff Data Table}
-\label{tab:model_cutoff}
-%\scriptsize
-\footnotesize
-
-
-\begin{tabular}{p{5cm} p{3cm} p{3cm} p{3cm}}
-\hline
-\textbf{Model (Hugging Face Repository)} & \textbf{Stated Knowledge Cutoff Date} & \textbf{Public Release Date}  \\
-\hline
-\texttt{openai/gpt-5} & Sep 30, 2024 & August 7, 2025  \\
-\hline
-\texttt{openai/gpt-5-mini} & May 31, 2024 & August 7, 2025  \\
-\hline
-\texttt{openai/gpt-5-nano} & May 31, 2024 & August 7, 2025  \\
-\hline
-\texttt{openai/gpt-oss-20b} & June 2024 & August 5, 2025  \\
-\hline
-\texttt{openai/gpt-oss-120b} & June 2024 & August 5, 2025 \\
-\hline
-\texttt{google/gemma-3-270m-it} & August 2024 & August 12, 2025 \\
-\hline
-\texttt{google/gemma-3-1b-it} & August 2024 & March 10, 2025 \\
-\hline
-\texttt{google/gemma-3-4b-it} & August 2024 & March 12, 2025 \\
-\hline
-\texttt{google/gemma-3-12b-it} & August 2024 & March 12, 2025 \\
-\hline
-\texttt{google/gemma-3-27b-it} & August 2024 & March 12, 2025  \\
-\hline
-\texttt{meta-llama/Llama-3.2-3B-Instruct} & December 2023 & September 25, 2024 \\
-\hline
-\texttt{meta-llama/Llama-3.1-8B-Instruct} & December 2023 & July 23, 2024 \\
-\hline
-\texttt{meta-llama/Llama-3.3-70B-Instruct} & December 2023 & December 6, 2024 \\
-\hline
-\texttt{microsoft/phi-4} & June 2024 & December 12, 2024\\
-\hline
-\texttt{Qwen/Qwen2.5-7B-Instruct} & Not Stated & September 18, 2024  \\
-\hline
-\texttt{Qwen/Qwen3-0.6B} & Not Stated & April 28, 2025 \\
-\hline
-\texttt{Qwen/Qwen3-1.7B} & Not Stated & April 28, 2025 \\
-\hline
-\texttt{Qwen/Qwen3-4B-Instruct-2507} & Not Stated & August 6, 2025 \\
-\hline
-\texttt{Qwen/Qwen3-30B-A3B-Instruct-2507} & Not Stated & July 29, 2025 \\
-\hline
-\texttt{Qwen/Qwen3-235B-A22B-Instruct-2507} & Not Stated & July 21, 2025  \\
-
-\hline
-\end{tabular}
-\end{table*}
-
-
-% HLE data sourceing https://www.futurehouse.org/research-announcements/hle-exam
-% Verified? HLE dataset https://huggingface.co/datasets/futurehouse/hle-gold-bio-chem
-
-
 \begin{table}[h!]
 \centering
-\caption{Dataset Publication Dates}
-\footnotesize
-\label{tab:dataset_publication_cutoff}
+\caption{Model Knowledge Cutoff Dates}
+\label{tab:model_cutoff}
+\scriptsize
+\vspace{-1em} 
 
-\begin{tabular}{p{5.5cm} p{1.25cm}}
+\begin{tabular}{p{3.6cm} p{1.2cm} p{1.2cm}}
+\toprule
+\textbf{Model} & \textbf{Knowledge-Cutoff} & \textbf{Public-Release}  \\
 \hline
-\textbf{Dataset} & \textbf{Release Date}  \\
+\texttt{gpt-5} & Sep 2024 & Aug 2025  \\
 \hline
-Humanities Last Exam~\cite{HumanityLastExam} & Jan 2025\\
+\texttt{gpt-5-mini} & May 2024 & Aug 2025  \\
 \hline
-Squadv2~\cite{DBLP:journals/corr/abs-1806-03822} & 2018 \\
+\texttt{gpt-5-nano} & May 2024 & Aug 2025  \\
 \hline
-HotpotQA~\cite{yang2018hotpotqa} & 2018 \\
+\texttt{gpt-oss-20b} & Jun 2024 & Aug 2025  \\
 \hline
-TrivaQA-web~\cite{2017arXivtriviaqa} & 2017 \\
+\texttt{gpt-oss-120b} & Jun 2024 & Aug 2025 \\
+%\hline
+%\texttt{gemma-3-270m-it} & Aug 2024 & Aug 2025 \\
 \hline
-NaturalQuestionsShort~\cite{kwiatkowski2019natural} & 2019 \\
+\texttt{gemma-3-1b-it} & Aug 2024 & Mar 2025 \\
 \hline
-PubMedQA~\cite{jin2019pubmedqa} & 2019 \\
+\texttt{gemma-3-4b-it} & Aug 2024 & Mar 2025 \\
 \hline
- BoolQ~\cite{clark2019boolq} & 2019 \\
- \hline
-FermiQA~\cite{kalyan2021much} & 2021 \\
+\texttt{gemma-3-12b-it} & Aug 2024 & Mar 2025 \\
 \hline
-MS-MARCO-QA~\cite{bajaj2016ms} & 2016 \\
+\texttt{gemma-3-27b-it} & Aug 2024 & Mar 2025  \\
 \hline
-MusiqueQA~\cite{trivedi2022musique} & 2022 \\
+\texttt{Llama-3.2-3B-Instruct} & Dec 2023 & Sep 2024 \\
 \hline
-2WikiMultiHopQA~\cite{ho2020constructing} & 2020 \\
+\texttt{Llama-3.1-8B-Instruct} & Dec 2023 & Jul 2024 \\
 \hline
+\texttt{Llama-3.3-70B-Instruct} & Dec 2023 & Dec 2024 \\
+\hline
+\texttt{Llama-4-Maverick-Instruct-FP8} &  \textcolor{red}{MISSING} & \textcolor{red}{MISSING}  \\   % TODO fill in maverick
+\hline
+\texttt{phi-4} & June 2024 & Dec 2024\\
+%\hline
+%\texttt{Qwen3-0.6B} & ? & Apr 2025 \\
+\hline
+\texttt{Qwen3-1.7B} & ? & Apr 2025 \\
+\hline
+\texttt{Qwen3-4B-Instruct-2507} & ? & Aug 2025 \\
+\hline
+\texttt{Qwen2.5-7B-Instruct} & ? & Sep 2024  \\  % Not Stated  or N/A
+\hline
+\texttt{Qwen3-30B-A3B-Instruct-2507} & ? & Jul 2025 \\
+\hline
+\texttt{Qwen3-235B-A22B-Instruct-2507} & ? & Jul 2025  \\
+\bottomrule
 \end{tabular}
+%\vspace{-1em} 
 \end{table}
 
 
 
+
+
+
+
+
 \section{Results}
+
+
+
+\begin{figure}[h!]
+%	\vspace*{-1.0em}
+	\centering
+	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/r_minus_q.pdf}
+	\vspace{-0.8em}
+	\caption{The rewrite of the question to disambiguate causes }
+	%	\caption{The quality of context information presented to the question answering LM has a drastic impact on system performance. Accuracy is high when RAG systems correctly surface context with the answer (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), benchmark performance suffers.}
+	\label{fig:94}
+%	\vspace{-1em}   
+\end{figure}
+
+\begin{figure}[h!]
+%	\vspace*{-1.0em}
+	\centering
+	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/r_minus_q_afc_giveaway.pdf}
+	\vspace{-0.8em}
+	\caption{The rewrite of the question to disambiguate causes }
+	%	\caption{The quality of context information presented to the question answering LM has a drastic impact on system performance. Accuracy is high when RAG systems correctly surface context with the answer (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), benchmark performance suffers.}
+	\label{fig:14}
+%	\vspace{-1em}   
+\end{figure}
+
+\begin{figure}[h!]
+%	\vspace*{-1.0em}
+	\centering
+	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/r_minus_q_afc_giveaway_dataset.pdf}
+	\vspace{-0.8em}
+	\caption{The rewrite of the question to disambiguate causes }
+	%	\caption{The quality of context information presented to the question answering LM has a drastic impact on system performance. Accuracy is high when RAG systems correctly surface context with the answer (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), benchmark performance suffers.}
+	\label{fig:17}
+%	\vspace{-1em}   
+\end{figure}
 
 
 
@@ -522,6 +591,7 @@ LM-based generative clarification and disambiguation of questions works when the
 
 
 \newpage
+% TODO figure out how to get natbib to cite by number instead of author-year
 %\bibliographystyle{IEEEtran}
 {\small
 \bibliography{references}
@@ -533,3 +603,5 @@ LM-based generative clarification and disambiguation of questions works when the
 
 
 \end{document}
+
+
