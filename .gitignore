@@ -13,6 +13,10 @@ results/
 old/
 data-full/
 data-subset-100/
+data-subset-500/
+data-post-cutoff/
+data-post-cutoff-afc/
+data-subset-500-afc
 source_data/
 venv-croissant/
 croissant/

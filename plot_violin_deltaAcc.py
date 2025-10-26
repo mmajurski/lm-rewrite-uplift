@@ -244,7 +244,11 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     all_models.sort()
 
 
-    
+
+
+    post_cutoff_datasets = ['ai_plan', 'ai_plan_yb','arXiv_2502_17521v1', 'arXiv_2502_17521v1_yb', 'hle']
+    all_datasets_ordered = [d for d in post_cutoff_datasets if d in all_datasets] + [d for d in all_datasets if d not in post_cutoff_datasets]
+    all_datasets = all_datasets_ordered
     
 
 
@@ -265,16 +269,23 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
             r_minus_q = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc']
             r_minus_q_afc_giveaway = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc_giveaway_afc']
             r_minus_q_giveaway = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc_giveaway']
+            rafc_giveaway_minus_qafc_giveaway = model_data['avg_rewrite_acc_giveaway_afc'] - model_data['avg_ref_acc_giveaway_afc']
+            rafc_minus_qafc_giveaway = model_data['avg_rewrite_acc_afc'] - model_data['avg_ref_acc_giveaway_afc']
             if 'r_minus_q' not in per_model_data[model_name]:
                 per_model_data[model_name]['r_minus_q'] = []
             if 'r_minus_q_afc_giveaway' not in per_model_data[model_name]:
                 per_model_data[model_name]['r_minus_q_afc_giveaway'] = []
             if 'r_minus_q_giveaway' not in per_model_data[model_name]:
                 per_model_data[model_name]['r_minus_q_giveaway'] = []
+            if 'rafc_giveaway_minus_qafc_giveaway' not in per_model_data[model_name]:
+                per_model_data[model_name]['rafc_giveaway_minus_qafc_giveaway'] = []
+            if 'rafc_minus_qafc_giveaway' not in per_model_data[model_name]:
+                per_model_data[model_name]['rafc_minus_qafc_giveaway'] = []
             per_model_data[model_name]['r_minus_q'].append(r_minus_q)
             per_model_data[model_name]['r_minus_q_afc_giveaway'].append(r_minus_q_afc_giveaway)
             per_model_data[model_name]['r_minus_q_giveaway'].append(r_minus_q_giveaway)
-
+            per_model_data[model_name]['rafc_giveaway_minus_qafc_giveaway'].append(rafc_giveaway_minus_qafc_giveaway)
+            per_model_data[model_name]['rafc_minus_qafc_giveaway'].append(rafc_minus_qafc_giveaway)
 
     # Violin plot: for each model, show the distribution of r_minus_q per dataset
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -293,7 +304,7 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     ax.set_xticks(np.arange(1, len(all_models) + 1))
     ax.set_xticklabels(all_models, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - Ref")
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - Orig_Q")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Model (All Datasets)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
@@ -320,7 +331,7 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     ax.set_xticks(np.arange(1, len(all_models) + 1))
     ax.set_xticklabels(all_models, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - (Ref with AFC)")
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with AFC)")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Model (All Datasets)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
@@ -344,12 +355,15 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
         showmeans=True,
         showextrema=True
     )
+        
 
     # Set x-ticks and labels (models)
     ax.set_xticks(np.arange(1, len(all_models) + 1))
     ax.set_xticklabels(all_models, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - (Ref with Context)")
+    
+
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with Context)")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Model (All Datasets)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
@@ -358,6 +372,73 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/r_minus_q_giveaway.svg', dpi=300, bbox_inches='tight')
     plt.close()
 
+
+
+
+    # Violin plot: for each model, show the distribution of r_minus_q per dataset
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
+    violin_data = [per_model_data[model]['rafc_giveaway_minus_qafc_giveaway'] for model in all_models]
+
+    # Make the violin plot
+    parts = ax.violinplot(
+        violin_data,
+        showmeans=True,
+        showextrema=True
+    )
+        
+
+    # Set x-ticks and labels (models)
+    ax.set_xticks(np.arange(1, len(all_models) + 1))
+    ax.set_xticklabels(all_models, rotation=45, ha='right')
+
+    
+
+    ax.set_ylabel("Benchmark Accuracy:\n(Rewrite_Q with AFC) - (Orig_Q with AFC)")
+    ax.set_title("Distribution of Benchmark Accuracy Uplift per Model (All Datasets)")
+    ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
+
+    plt.tight_layout()
+    os.makedirs(f'./imgs/acc_uplift/{generating_model_name}', exist_ok=True)
+    plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/rafc_giveaway_minus_qafc_giveaway.svg', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+
+
+
+
+
+
+    # Violin plot: for each model, show the distribution of rafc_minus_qafc_giveaway per dataset
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
+    violin_data = [per_model_data[model]['rafc_minus_qafc_giveaway'] for model in all_models]
+
+    # Make the violin plot
+    parts = ax.violinplot(
+        violin_data,
+        showmeans=True,
+        showextrema=True
+    )
+        
+
+    # Set x-ticks and labels (models)
+    ax.set_xticks(np.arange(1, len(all_models) + 1))
+    ax.set_xticklabels(all_models, rotation=45, ha='right')
+
+    
+
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with AFC)")
+    ax.set_title("Distribution of Benchmark Accuracy Uplift per Model (All Datasets)")
+    ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
+
+    plt.tight_layout()
+    os.makedirs(f'./imgs/acc_uplift/{generating_model_name}', exist_ok=True)
+    plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/rafc_minus_qafc_giveaway.svg', dpi=300, bbox_inches='tight')
+    plt.close()
 
     
 
@@ -381,18 +462,24 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
             r_minus_q = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc']
             r_minus_q_afc_giveaway = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc_giveaway_afc']
             r_minus_q_giveaway = model_data['avg_rewrite_acc'] - model_data['avg_ref_acc_giveaway']
+            rafc_giveaway_minus_qafc_giveaway = model_data['avg_rewrite_acc_giveaway_afc'] - model_data['avg_ref_acc_giveaway_afc']
+            rafc_minus_qafc_giveaway = model_data['avg_rewrite_acc_afc'] - model_data['avg_ref_acc_giveaway_afc']
             if 'r_minus_q' not in per_dataset_data[dataset_name]:
                 per_dataset_data[dataset_name]['r_minus_q'] = []
             if 'r_minus_q_afc_giveaway' not in per_dataset_data[dataset_name]:
                 per_dataset_data[dataset_name]['r_minus_q_afc_giveaway'] = []
             if 'r_minus_q_giveaway' not in per_dataset_data[dataset_name]:
                 per_dataset_data[dataset_name]['r_minus_q_giveaway'] = []
+            if 'rafc_giveaway_minus_qafc_giveaway' not in per_dataset_data[dataset_name]:
+                per_dataset_data[dataset_name]['rafc_giveaway_minus_qafc_giveaway'] = []
+            if 'rafc_minus_qafc_giveaway' not in per_dataset_data[dataset_name]:
+                per_dataset_data[dataset_name]['rafc_minus_qafc_giveaway'] = []
             per_dataset_data[dataset_name]['r_minus_q'].append(r_minus_q)
             per_dataset_data[dataset_name]['r_minus_q_afc_giveaway'].append(r_minus_q_afc_giveaway)
             per_dataset_data[dataset_name]['r_minus_q_giveaway'].append(r_minus_q_giveaway)
-
-        if 'hle' in dataset_name:
-            print(per_dataset_data[dataset_name])
+            per_dataset_data[dataset_name]['rafc_giveaway_minus_qafc_giveaway'].append(rafc_giveaway_minus_qafc_giveaway)
+            per_dataset_data[dataset_name]['rafc_minus_qafc_giveaway'].append(rafc_minus_qafc_giveaway)
+            
 
     
 
@@ -413,7 +500,7 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     ax.set_xticks(np.arange(1, len(all_datasets) + 1))
     ax.set_xticklabels(all_datasets, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - Ref")
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - Orig_Q")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Dataset (All Models)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
@@ -441,7 +528,7 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     ax.set_xticks(np.arange(1, len(all_datasets) + 1))
     ax.set_xticklabels(all_datasets, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - (Ref with AFC)")
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with AFC)")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Dataset (All Models)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
@@ -470,11 +557,69 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     ax.set_xticks(np.arange(1, len(all_datasets) + 1))
     ax.set_xticklabels(all_datasets, rotation=45, ha='right')
 
-    ax.set_ylabel("Benchmark Accuracy:\nRewrite - (Ref with Context)")
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with Context)")
     ax.set_title("Distribution of Benchmark Accuracy Uplift per Dataset (All Models)")
     ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
 
     plt.tight_layout()
     os.makedirs(f'./imgs/acc_uplift/{generating_model_name}', exist_ok=True)
     plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/r_minus_q_giveaway_dataset.svg', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+
+
+     # Violin plot: for each model, show the distribution of r_minus_q per dataset
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
+    violin_data = [per_dataset_data[dataset_name]['rafc_giveaway_minus_qafc_giveaway'] for dataset_name in all_datasets]
+
+    # Make the violin plot
+    parts = ax.violinplot(
+        violin_data,
+        showmeans=True,
+        showextrema=True
+    )
+
+    # Set x-ticks and labels (models)
+    ax.set_xticks(np.arange(1, len(all_datasets) + 1))
+    ax.set_xticklabels(all_datasets, rotation=45, ha='right')
+
+    ax.set_ylabel("Benchmark Accuracy:\n(Rewrite_Q with AFC) - (Orig_Q with AFC)")
+    ax.set_title("Distribution of Benchmark Accuracy Uplift per Dataset (All Models)")
+    ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
+
+    plt.tight_layout()
+    os.makedirs(f'./imgs/acc_uplift/{generating_model_name}', exist_ok=True)
+    plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/rafc_giveaway_minus_qafc_giveaway_dataset.svg', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+
+
+     # Violin plot: for each model, show the distribution of r_minus_q per dataset
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
+    violin_data = [per_dataset_data[dataset_name]['rafc_minus_qafc_giveaway'] for dataset_name in all_datasets]
+
+    # Make the violin plot
+    parts = ax.violinplot(
+        violin_data,
+        showmeans=True,
+        showextrema=True
+    )
+
+    # Set x-ticks and labels (models)
+    ax.set_xticks(np.arange(1, len(all_datasets) + 1))
+    ax.set_xticklabels(all_datasets, rotation=45, ha='right')
+
+    ax.set_ylabel("Benchmark Accuracy:\nRewrite_Q - (Orig_Q with AFC)")
+    ax.set_title("Distribution of Benchmark Accuracy Uplift per Dataset (All Models)")
+    ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
+
+    plt.tight_layout()
+    os.makedirs(f'./imgs/acc_uplift/{generating_model_name}', exist_ok=True)
+    plt.savefig(f'./imgs/acc_uplift/{generating_model_name}/rafc_minus_qafc_giveaway_dataset.svg', dpi=300, bbox_inches='tight')
     plt.close()

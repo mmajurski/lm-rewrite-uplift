@@ -4,14 +4,8 @@ import copy
 import numpy as np
 
 import json
-import re
 
 import utils
-
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 
 plot_colors = [
@@ -145,7 +139,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
-                    d_fp = d_fp.replace('mmajursk','mmajurski')
+                    # d_fp = d_fp.replace('mmajursk','mmajurski')
+                    d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -257,7 +252,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             all_datasets.sort()
             all_models = list(all_models)
             all_models.sort()
-            plt.figure(figsize=(8, 8))
+            plt.figure(figsize=(7, 7))
             figure_has_content = False
 
             # Create a scatterplot for each model
@@ -292,13 +287,13 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             # Add grid and labels
             # plt.grid(True, alpha=0.3)
             if context_type == 'afc':
-                plt.xlabel('Average AFC Dataset Reference Accuracy')
-                plt.ylabel('Average AFC Dataset Reformat Accuracy')
-                plt.title(f'Average AFC Reference vs Reformat Accuracy')
+                plt.xlabel('Benchmark Accuracy for Original Questions')
+                plt.ylabel('Benchmark Accuracy for Questions Rewritten Using AFC')
+                plt.title('Benchmark Accuracy Comparison: Original Questions vs Rewritten Questions')
             else:
-                plt.xlabel('Average Dataset Reference Accuracy')
-                plt.ylabel('Average Dataset Reformat Accuracy')
-                plt.title(f'Average Reference vs Reformat Accuracy')
+                plt.xlabel('Benchmark Accuracy for Original Questions')
+                plt.ylabel('Benchmark Accuracy for Questions Rewritten Using Context')
+                plt.title('Benchmark Accuracy Comparison: Original Questions vs Rewritten Questions')
             
             # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             # plt.legend()
@@ -315,12 +310,12 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             # Create legend for colors (datasets)
             handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
             labels_color = [f"{m}" for m in all_models]
-            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='x-small')  #x-small
+            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="center right", fontsize='x-small')  #x-small
 
             # Create legend for markers (models)
             handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
             labels_marker = [f"{d}" for d in all_datasets]
-            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower right", fontsize='x-small') # x-small
+            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower right", fontsize='x-small') # x-small  upper left
 
             # Add both legends
             ax.add_artist(legend1)

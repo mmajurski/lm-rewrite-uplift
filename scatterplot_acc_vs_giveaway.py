@@ -63,8 +63,7 @@ plot_markers = [
     '.',
 ]
 
-# ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']
-#for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc', 'data-subset-500-afc']:
+
 for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
     for question_source in ['orig', 'reformat']:
         for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
@@ -199,7 +198,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             all_datasets.sort()
             all_models = list(all_models)
             all_models.sort()
-            plt.figure(figsize=(8, 8))
+            plt.figure(figsize=(7, 7))
             figure_has_content = False
 
             # Create a scatterplot for each model
@@ -234,12 +233,23 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             # Add grid and labels
             # plt.grid(True, alpha=0.3)
             if question_source == 'orig':
-                plt.title(f'Average Reference vs Giveaway Accuracy')
-                plt.xlabel('Average Dataset Reference Accuracy')
+                if dataset_fldr.endswith('-afc'):
+                    plt.title(f'Benchmark Accuracy Orig_Q vs Orig_Q with AFC')
+                    plt.ylabel('Benchmark Accuracy for Orig_Q with AFC')
+                else:
+                    plt.title(f'Benchmark Accuracy for Orig_Q vs Orig_Q with Context')
+                    plt.ylabel('Benchmark Accuracy for Orig_Q with Context')
+                plt.xlabel('Benchmark Accuracy for Orig_Q')
             else:
-                plt.title(f'Average Reformat vs Giveaway Accuracy')
-                plt.xlabel('Average Dataset Reformat Accuracy')
-            plt.ylabel('Average Dataset Giveaway Accuracy')
+                if dataset_fldr.endswith('-afc'):
+                    plt.title(f'Benchmark Accuracy for Rewrite_Q vs Rewrite_Q with AFC')
+                    plt.ylabel('Benchmark Accuracy for Rewrite_Q with AFC')
+                else:
+                    plt.title(f'Benchmark Accuracy for Rewrite_Q vs Rewrite_Q with Context')
+                    plt.ylabel('Benchmark Accuracy for Rewrite_Q with Context')
+                
+                plt.xlabel('Benchmark Accuracy for Rewrite_Q')
+            
             # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             # plt.legend()
             plt.xlim(0, 1)
@@ -256,12 +266,21 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
             labels_color = [f"{m}" for m in all_models]
             # legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='small')  #x-small
-            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="center right", fontsize='x-small')  #x-small
+            if dataset_fldr.endswith('-afc'):
+                loc = "upper left"
+            else:
+                loc = "center right"
+                
+            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc=loc, fontsize='x-small')  #x-small  
 
             # Create legend for markers (models)
             handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
             labels_marker = [f"{d}" for d in all_datasets]
-            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower right", fontsize='x-small') # x-small
+            if dataset_fldr.endswith('-afc'):
+                loc = "lower right"
+            else:
+                loc = "lower right"
+            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc=loc, fontsize='x-small') # x-small  
 
             # Add both legends
             ax.add_artist(legend1)
@@ -276,7 +295,3 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
 
             print(f"Scatterplots saved for {len(all_models)} models")
             print(f"   fp = ./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")
-
-
-
-

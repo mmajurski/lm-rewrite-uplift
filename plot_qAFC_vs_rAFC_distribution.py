@@ -71,6 +71,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
         qAFC_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig-giveaway')
         rAFC_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-reformat')  # logs-oe-gpt120b-afc-filtered-reformat
         rAFC_giveaway_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-reformat-giveaway')
+        # qAFC_giveaway_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig-giveaway')
 
         if os.path.exists(qAFC_folder):
             qAFC_logs = [fn for fn in os.listdir(qAFC_folder) if fn.endswith('.json')]
@@ -94,8 +95,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                 logs = rAFC_logs
                 question_folder = rAFC_folder
             elif log_type == 'giveaway':
-                logs = qAFC_logs
-                question_folder = qAFC_folder
+                logs = rAFC_giveaway_logs
+                question_folder = rAFC_giveaway_folder
             else:
                 raise ValueError(f"Invalid log type: {log_type}")
 
@@ -256,7 +257,7 @@ for m_idx, model_name in enumerate(all_models):
 
     # After looping over datasets, plot all three distributions as side-by-side histograms
     data_to_plot = [model_acc_vals_q, model_acc_vals_r]#, model_acc_vals_r_giveaway]
-    labels = ["Question + Context", "Rewritten Question", "Rewritten Question + Context"]
+    labels = ["Question + Context", "Rewritten Question"]#, "Rewritten Question + Context"]
     colors = [plot_colors[0], plot_colors[1], plot_colors[2]]
 
     bins = np.linspace(0, 1, 16)
@@ -303,7 +304,7 @@ for m_idx, model_name in enumerate(all_models):
 
     # After looping over datasets, plot all three distributions as side-by-side histograms
     data_to_plot = [model_acc_vals_q_afc, model_acc_vals_r_afc]#, model_acc_vals_r_giveaway_afc]
-    labels = ["Question + Answer-Free Context", "Rewritten Question", "Rewritten Question + Answer-Free Context"]
+    labels = ["Question + Answer-Free Context", "Rewritten Question"]#, "Rewritten Question + Answer-Free Context"]
     colors = [plot_colors[0], plot_colors[1], plot_colors[2]]
 
     bins = np.linspace(0, 1, 16)
