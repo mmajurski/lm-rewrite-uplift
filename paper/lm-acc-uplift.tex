@@ -208,6 +208,7 @@ $^1$National Institute of Standards and Technology \quad $^2$University of Maryl
 	Specifically, given a user question with associated grounding context that does not contain the answer, benchmark accuracy uplift is significant, even compared to just prepending that context before the question.
 	Using \texttt{gpt-oss-20b} to rewrite a subset of Humanities Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
 	This uplift in accuracy cannot be fully recovered just through prompting at question evaluation time, separate rewriting and answering phases are required.
+	Additionally, with LM benchmarking we demonstrate that question rewriting improves the embedding space alignment between the question and grounding context compared to the original.
 	% TODO fill in before final camera ready
 	%	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
 \end{abstract}
