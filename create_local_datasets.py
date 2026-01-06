@@ -345,7 +345,26 @@ def flashrag_narrativeqa():
         json.dump(train_data, f, indent=2)
     
     
-    
+def mmlu_pro():
+    dataset = load_dataset("TIGER-Lab/mmlu-pro") # "all"
+    print("Converting dataset to JSON format...")
+    train_data = []
+    for split in ["test"]:
+        for i in tqdm.tqdm(range(len(dataset[split]))):
+            val = dataset[split][i]
+            
+            train_data.append({
+                "question_id": val['question_id'],
+                "question": val['question'],
+                "options": val['options'],
+                "answer": val['answer'],
+                "answer_index": val['answer_index'],
+                "category": val['category'],
+            })
+
+    print(f"Saving training set ({len(train_data)} examples)...")
+    with open("mmlu_pro.json", "w") as f:
+        json.dump(train_data, f, indent=2)
     
 
 
@@ -363,4 +382,6 @@ if __name__ == "__main__":
     # flashrag_hotpotqa()
     # flashrag_msmarcoqa()
     # flashrag_musique()
-    flashrag_narrativeqa()
+    # flashrag_narrativeqa()
+
+    mmlu_pro()
