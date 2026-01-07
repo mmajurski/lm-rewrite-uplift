@@ -173,10 +173,12 @@ showstringspaces=false,tabsize=2,breaklines=true}
 
 %\title{Evaluating LM Accuracy Uplift From Rewriting Questions to Remove Ambiguities}
 %\title{Evaluating LM Accuracy Uplift: Using Answer Free Context to Double gpt-oss-20b Performance on a subset of HLE}
-\title{Evaluating LM Accuracy Uplift: Doubling the Performance on Humanity's Last Exam Using Answer-Free Context}
 %\title{Evaluating LM Context Uplift: Doubling HLE Benchmark Performance Using Answer-Free Context}
 %\title{LM Accuracy Uplift: Using Answer-Free Context Information to Double gpt-oss-20b Performance on a subset of HLE}
 %\title{Squeezing All Improvement From Your Context: QA Accuracy Uplift Even When the Context Doens't Surface the Answer}
+%\title{Evaluating LM Accuracy Uplift: Doubling the Performance on Humanity's Last Exam Using Answer-Free Context}
+\title{Query Disambiguation via Answer-Free Context: Doubling Performance on Humanity’s Last Exam}
+
 
 
 
@@ -203,19 +205,24 @@ $^1$National Institute of Standards and Technology \quad $^2$University of Maryl
 % rewrite = 0.372
 
 \begin{abstract}
-How eloquently, clearly, and unambiguously one poses a question has a stark impact on the quality of answer.
-This concept applies equally well to students and factual questions posed to Language Models (LMs). 
-LM capability continues to advance and a plethora of benchmarks have been developed (at great expense) to assess model capability. 
-This work explores the interplay between the quality of the background grounding information in the LM context window and the quality of the resulting answer.
-We find that combining well grounded dynamic context construction (i.e. RAG) with query rewriting reduces question ambiguity resulting in significant accuracy gains.
+How eloquently, clearly, and unambiguously one phrases a question has profound impacts on the quality of the response.
+%This concept applies equally well to students and factual questions posed to Language Models (LMs). 
+This principle applies as much to Language Models (LMs) as it does to human students.
+%LM capability continues to advance and a plethora of benchmarks have been developed (at great expense) to assess model capability. 
+While model capabilities continue to advance, often evaluated through expensive, static benchmarks, the interplay between grounding context and query formulation remains under-explored.
+This work investigates how the quality of background grounding information in a model's context window affects accuracy. 
+%This work investigates the interplay between the quality of the background grounding information in the LM context window and the quality of the resulting answer.
+We find that combining well grounded dynamic context construction (i.e. RAG) with query rewriting reduces question ambiguity, resulting in significant accuracy gains.
 %Specifically, given a user question with associated grounding context which does not contain the answer, rewriting the question to reduce ambiguity produces benchmark accuracy uplift, even compared to just prepending that context before the question.
 Specifically, given a user question with associated answer-free grounding context, rewriting the question to reduce ambiguity produces benchmark accuracy uplift; even compared to just prepending that context before the question.
+% Specifically, we introduce Answer-Free Context (AFC): grounding information that is relevant to a query but does not contain the answer. 
+% By using \texttt{gpt-oss-20b} to rewrite questions based on AFC, we improved \texttt{gpt-5-mini} accuracy on a subset of Humanity’s Last Exam (HLE) from 0.14 to 0.37. 
+% We demonstrate that this "accuracy uplift" cannot be recovered through simple prompting at inference time; rather, distinct rewriting and answering phases are required to fully leverage the grounding information.
 Using \texttt{gpt-oss-20b} to rewrite a subset of Humanity's Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
-This accuracy uplift cannot be fully recovered just through prompting at question evaluation time, separate rewriting and answering phases are required.
+We demonstrate that this accuracy uplift cannot be fully recovered just through prompting at inference time; rather, distinct rewriting and answering phases are required.
 % TODO fill in before final camera ready
 %	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
 \end{abstract}
-
 
 
 \section{Introduction}
@@ -226,8 +233,13 @@ This accuracy uplift cannot be fully recovered just through prompting at questio
 %Intro to reword:
 %Users often implicitly assume that an LLM shares their mental model, including their background knowledge, context, and intent. This leads them to omit critical information when formulating a query, believing it to be self-evident. The LLM, however, operates on the statistical patterns in its training data and the explicit text of the prompt. When faced with an underspecified query, it must make an assumption to generate a response. If the model's chosen assumption does not align with the user's unstated intent, the resulting answer—while potentially factually correct under that assumed interpretation—will be perceived by the user as incorrect, irrelevant, or even as a "hallucination".
 
+
 The ongoing explosion of Language Model (LM) capability is largely a consequence of scaling laws, which have demonstrated relationships between performance and parameter count, dataset size, and compute. 
-This capability growth has opened a widening chasm between what modern LMs can demonstrably do and how we measure the spiky model intelligence. % abilities.
+This capability growth has opened a widening chasm between what modern LMs can demonstrably do and how we measure it's spiky intelligence. 
+
+% Standard benchmarks serve as the primary engine for measuring progress, yet human-curated static evaluations are often brittle. 
+%A recurring issue is that users (and benchmark prompts) implicitly assume an LLM shares their mental model, intent, and background knowledge. 
+%When critical context is omitted, the LLM must rely on training patterns to fill the gaps. If its internal assumptions diverge from the user's unstated intent, the resulting output—while potentially factually sound—is perceived as incorrect or irrelevant.
 
 Leaderboard style benchmarks have been a primary engine, motivator, and evaluator of progress in machine learning; providing an objective scalable way to measure and compare capabilities. 
 Human curated static benchmarking is a brittle Gold Standard.
@@ -254,38 +266,40 @@ Human curated static benchmarking is a brittle Gold Standard.
 	%	\vspace{-1em}   
 \end{figure}
 LM users often implicitly assume the LM shares their mental model, including their background knowledge, context, and intent.
-This leads them to omit critical background and related information when formulating a query, believing it to be self-evident.
+This can cause them to omit critical background and related information when formulating a query, believing it to be self-evident.
+% If its internal assumptions diverge from the user's unstated intent, the resulting output—while potentially factually sound—is perceived as incorrect or irrelevant.
 The LM, lacking this context, operates on training data patterns and the explicit text of the prompt. %the patterns in its training data and the explicit text of the prompt. 
 When faced with an under-specified query, it must make assumptions to generate a response.
 If the model's chosen assumptions do not align with the user's unstated intent, the resulting answer (while potentially factually correct under that assumed interpretation) will be perceived by the user as incorrect, or irrelevant.%, or even as a "hallucination".
 
-LMs undeniably possess considerable general knowledge; but are inherently weaker with domain-specific and proprietary information. 
-%Operating in professional domains with specialized 
-These domains require access to supplemental private, specialized, and often confidential data absent from any public training corpus. 
-Specifically, with AI systems targeting professional workflows, new types of evaluation are required to characterize LM capability grounded in document populations.
-%For enterprise applications with internal corporate knowledge management the generalized information contained within a pre-trained LM can be insufficient. 
-%These domains require access to private, specialized, and often confidential data absent from any public training corpus. 
-Current approaches involve retrieval systems which dynamically construct context for the LM based upon user queries~\citep{NEURIPS2024_db93ccb6}.
-Contemporary evaluation of Retrieval-Augmented Generation (RAG) systems focuses on ranking quality and retrieval performance~\citep{yang2024crag,NEURIPS2024_27245589} with less emphasis on how to best utilize the retrieved information.
-%LM performance evaluation is accurate if RAG surfaces the correct answer, but if it only retrieves relevant information (without the answer), performance suffers. 
-LM+RAG evaluation is accurate if RAG surfaces the correct answer, but if only relevant information sans answer is retrieved, performance suffers. 
+While LMs undeniably possess considerable general knowledge; they can struggle with domain-specific or proprietary data absent from public training sets. 
+In professional and enterprise workflows, system performance depends on Retrieval-Augmented Generation (RAG) to dynamically construct context for the LM based upon user queries~\citep{lewis2020retrieval,NEURIPS2024_db93ccb6}.
+However, current RAG evaluation focuses on retrieval ranking~\citep{yang2024crag,NEURIPS2024_27245589} rather than how models utilize retrieved documents; information which might be relevant without explicitly contain the answer.
 
-Our methodology evaluates the impact of the retrieved informational content on LM+RAG system performance; both when the correct answer is surfaced and when only related background information is found.
+%LMs undeniably possess considerable general knowledge; but are inherently weaker with domain-specific and proprietary information. 
+%%Operating in professional domains with specialized 
+%These domains require access to supplemental private, specialized, and often confidential data absent from any public training corpus. 
+%Specifically, with AI systems targeting professional workflows, new types of evaluation are required to characterize LM capability grounded in document populations.
+%%For enterprise applications with internal corporate knowledge management the generalized information contained within a pre-trained LM can be insufficient. 
+%%These domains require access to private, specialized, and often confidential data absent from any public training corpus. 
+%Current approaches involve retrieval systems which dynamically construct context for the LM based upon user queries~\citep{NEURIPS2024_db93ccb6}.
+%Contemporary evaluation of Retrieval-Augmented Generation (RAG) systems focuses on ranking quality and retrieval performance~\citep{yang2024crag,NEURIPS2024_27245589} with less emphasis on how to best utilize the retrieved information.
+%LM+RAG evaluation is accurate if RAG surfaces the correct answer, but if only relevant information sans answer is retrieved, performance suffers. 
+
+In this work, we explore the impact on system performance of Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer.
+%Our methodology explores how retrieved information impacts LM+RAG system performance; both when the correct answer is surfaced and when only related background information is found.
 %document grounded (i.e. LM+RAG) system performance when either the correct answer is surfaced or when only related background information is found. %, as well as when only background relevant information is surfaced.
-Additionally, we demonstrate benchmark accuracy improvement using a contextually grounded question disambiguation rewrite.
+%Additionally, we demonstrate benchmark accuracy improvement using a contextually grounded question disambiguation rewrite as shown in \Cref{fig:figure1}.
+We demonstrate that even when RAG fails to surface a direct answer, the retrieved background information can be used to perform a contextually grounded disambiguation rewrite (\Cref{fig:figure1}). 
+This process improves an underspecified query before it is posed to the answering model.
 %Our methodology extracts both additional benchmark accuracy and improved contextual grounding by performing a question disambiguation rewrite. 
-This rewrite works with Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the answer. 
-% Our methodology for extracting both additional benchmark accuracy and improved contextual grounding via question disambiguation rewrites that make use of Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the answer. 
-\Cref{fig:hle-uplift} demonstrates the improvement this method provides on a subset of Humanity's Last Exam with validated grounding context, showing \texttt{gpt-5-mini} improving from an accuracy of 0.14 on the original questions to 0.37 on the rewritten questions.
-
-The core of our approach is shown in \Cref{fig:figure1}.
-Given a user question and associated \texttt{AFC}, an LM is used to disambiguate and rewrite the question before its posed to the LM for answering.
-%First, an LM generates Answer-Free Context for a particular question; then another LM (which may be a different model) is asked to rewrite the question using the original question plus that context. 
+%This rewrite operates using Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer. 
+%Given a user question and associated \texttt{AFC}, an LM is used to disambiguate and rewrite the question before its posed to the LM for answering.
 An example of an original question, associated \texttt{AFC}, and rewritten question are shown below.
 
 \begin{mdframed}[style=spacedframe]
-%	\small
-%	\scriptsize
+	%	\small
+	%	\scriptsize
 	\footnotesize
 	\textbf{Original question:} What kind of lasers are crystals of zinc suflde used in?
 	
@@ -296,13 +310,21 @@ An example of an original question, associated \texttt{AFC}, and rewritten quest
 	\noindent\textit{(Prompts are given in the Appendix.)}
 \end{mdframed}
 
-% TODO fill in and finalize the contributions
-\noindent The contributions of this work are as follows.
+% Our methodology for extracting both additional benchmark accuracy and improved contextual grounding via question disambiguation rewrites that make use of Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the answer. 
+As shown in \Cref{fig:hle-uplift}, this method can improve \texttt{gpt-5-mini} accuracy on a subset of Humanity's Last Exam (HLE) from 0.14 to 0.37. %0.14 on the original questions to 0.37 on the rewritten questions.
+%\Cref{fig:hle-uplift} demonstrates the improvement this method provides on a subset of Humanity's Last Exam with validated grounding context, showing \texttt{gpt-5-mini} improving from an accuracy of 0.14 on the original questions to 0.37 on the rewritten questions.
+
+
+\noindent This work makes the following contributions:
 \begin{packed_enum}
-	\item We explore the impact of RAG surfacing the correct answer vs only background information on document grounded LM accuracy;
-	\item We demonstrate leveraging answer-free background context for question disambiguation to improve model accuracy; and
-%	\item We compare and contrast simply pre-pending surfaced dynamic context against using that information for question disambiguation, demonstrating that question rewriting out-performs context pre-pending.
-	\item We show that using surfaced context for question disambiguation and rewriting out-performs pre-pending that information before the question.
+%	\item We explore the impact on LM system accuracy of the RAG surfacing the correct answer vs only background information;
+%	\item We demonstrate that leveraging \texttt{AFC} for question rewriting can improve model performance; and %answer-free background context for question disambiguation to improve model accuracy; and
+%%	\item We compare and contrast simply prepending surfaced dynamic context against using that information for question disambiguation, demonstrating that question rewriting out-performs context prepending.
+%%	\item We show that using surfaced context for question disambiguation and rewriting out-performs prepending that information before the question.
+%\item We show that this performance uplift requires a distinct rewriting phase and cannot be recovered by simply prepending context to the query.%, suggesting that reducing prompt ambiguity is a unique and necessary step for maximizing LLM utility.
+\item Analyzes the performance differential in RAG systems when retrieving direct answers versus purely auxiliary background information; 
+\item Introduces a method for leveraging Answer-Free Context (\texttt{AFC}) to disambiguate queries, yielding significant accuracy gains; and 
+\item Demonstrates that this accuracy uplift necessitates a distinct rewriting phase, as it cannot be replicated by simply prepending the retrieved context to a prompt. 
 \end{packed_enum}
 
 
@@ -313,9 +335,6 @@ An example of an original question, associated \texttt{AFC}, and rewritten quest
 
 
 \section{Related Works}
-
-
-
 
 % (maybe) talk in related works about the disconnect between HLE type benchmarks where the model just has to answer, and when tool use (i.e. internet) is available. In modern RAG finding and surfacing relevant and on topic informatino about the question can provide significant alpha. But that requires shifrting the evaluation target from a Model (+tools) to the Model+RAG dynamic context engine system. That second more complex system with grounding documents is much harder to evaluate than an LM in isolation. 
 
