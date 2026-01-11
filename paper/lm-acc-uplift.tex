@@ -560,12 +560,12 @@ The giveaway scores are used to remove any reformatted questions which got easie
 I.e. if the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
 This produces a new benchmark for each of the rewriting models that should be strictly more difficult than the original, but with disambiguated questions.
 
-% TODO continue editing
+
 
 \subsection{Evaluation methodology}
 
 %To evaluate the benchmark accuracy uplift provided by question rewriting and expansion 
-The approach to evaluate the efficacy of query rewriting grounded in context each model under evaluation is benchmarked under three configurations.
+Evaluating the efficacy of query rewriting grounded in context requires benchmarking each model under evaluation for three configurations:
 {\renewcommand\labelenumi{(\theenumi)}
 	\begin{enumerate*} %packed_enum   enumerate
 		\item Original Question: the normal benchmarking use case, 
@@ -581,20 +581,20 @@ To quantify the accuracy uplift, we compute the following average per-model and 
 		\item Rewriten Question - Original Question with Context Prepended: the rewrite uplift compared to the RAG retrieval use case
 	\end{enumerate*}
 }
-The comparison between the rewritten question and the original question with the context prepended enables evaluating whether the rewrite outperforms benchmarking models with a RAG database which contains background information.
+This comparison between the rewritten question and the original question with the context prepended enables evaluating whether the rewrite outperforms benchmarking models with a RAG database which contains only background information.
 However, if the context contains the answer, one would expect any benchmarking with the context included to yield roughly 100\% accuracy.
 To mitigate this we developed a version of each grounding context that is "Answer-Free". 
-This context was developed using a static LM (\texttt{gpt-oss-120b}) to rewrite the context (see \Cref{apx:afc} for the prompt).
-The results section covers the accuracy uplift using the original context (the less interesting use case) as well as the Answer-Free Context (AFC).
-AFC replicates the use case where a RAG system surfaced background information, but not the actual answer to the users question. 
-Our results demonstrate accuracy uplift in benchmark performance when question rewriting is performed using Answer-Free Context. 
-This uplift effect is larger than just prepending the AFC before the benchmark question.
+\texttt{AFC} was developed using a single LM (\texttt{gpt-oss-120b}) to rewrite the context (see \Cref{apx:afc} for the prompt).
+The results section covers the accuracy uplift using the original context (the less interesting use case) as well as the Answer-Free Context (\texttt{AFC}).
+\texttt{AFC} replicates the use case where a RAG system surfaces background information, but not the actual answer to the users question. 
+Our results demonstrate accuracy uplift in benchmark performance when question rewriting is performed using this Answer-Free Context. 
+This uplift effect is larger than just prepending the \texttt{AFC}.
 
-To characterize one hypothesis for why this affect shows up, we leverage an embedding model to understand the change in cosine distance between the original question and the context vs cosine distance between the rewritten question and the context.
+To characterize one hypothesis for why this affect shows up, we leverage an embedding model (\texttt{e5-mistral-7b-instruct}) to understand the change in cosine distance between the original question and the context compared to the cosine distance between the rewritten question and the context.
 We demonstrate that improvements in benchmark accuracy correlate with reductions in the cosine distance between the question and context.
 In other words, the rewritten question appears to place the model closer to the right frame of mind to answer the question, as the cosine distance between the question and the context is smaller after the rewrite.
 
-
+% TODO continue editing
 
 \section{Results}
 % gpt-5-mini on HLE rewrite using gpt-oss-20b
