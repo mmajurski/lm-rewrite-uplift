@@ -328,10 +328,6 @@ As shown in \Cref{fig:hle-uplift}, this method can improve \texttt{gpt-5-mini} a
 \end{packed_enum}
 
 
-% TODO continue editing
-
-
-
 
 
 \section{Related Works}
@@ -346,85 +342,46 @@ The RAG pipeline introduces its own optimization challenges, spanning document c
 A particularly critical component, with a long history in information retrieval, is the transformation, expansion, and normalization of the users query \citep{Rastogi2019,rivas2014study}.
 
 The initial user query is often an imperfect expression of the underlying information need, suffering from ambiguity, missing context, or terminology poorly aligned with the target document corpus. 
-To bridge this lexical gap, modern RAG systems, like their classic predecessors, employ query expansion and rewriting \citep{jagerman2023query,zhou2023unified}. 
-The goal is to reformulate the query to better surface relevant documents and improve the signal-to-noise ratio of the retrieved context.
+To bridge this lexical gap, modern RAG systems, like their classic predecessors, can employ query expansion and rewriting \citep{jagerman2023query,zhou2023unified,li2024dmqr}.
+Query expansion reformulates the question to better surface relevant documents and improve the signal-to-noise ratio of the retrieved context~\citep{gao2023retrieval}.
+%The goal is to reformulate the query to better surface relevant documents and improve the signal-to-noise ratio of the retrieved context.
 
-LMs have proven adept at this rewriting, expansion, and contextualization task; disambiguating queries using carefully designed prompts \citep{wilson2025contextualizing}. 
+LMs have proven adept at this rewriting, expansion, and contextualization task; disambiguating queries using carefully designed prompts \citep{wilson2025contextualizing,gao2023retrieval,sun2025picos}. 
 Other approaches explore post RAG retrieval optimizations for improving signal to noise in the surfaced documents, shifting from a retrieve-generate paradigm to retrieve-note-generate where the discovered documents are summarized into high level notes \citep{dai2025evinote}.
 
-Other prompting strategies focus on getting the most out of the documents placed into the LM context.
+Other dynamic context strategies focus on getting the most out of the documents placed within the LM context.
 For example, Step-Back Prompting attempts to have LMs derive high-level concepts from first principles to guide reasoning in query answering \citep{zheng2023take}.
-Frameworks like AGREE formulate methods to have the LM cite its sources within the context window (drawn from grounding documents) \citep{ye2023effective}.
+Frameworks like AGREE have the LM cite its sources within the context window (drawn from grounding documents) \citep{ye2023effective}.
 Other approaches involve extensions to chain-of-thought including Meta-CoT which models how to determine what underlying reasoning is required to arrive at a particular CoT \citep{xiang2025towards}.
-Any CoT type reasoning approaches enable the LM to employ some form of question rewriting during the process of figuring out how best to respond.
+CoT type reasoning approaches enable the LM to employ some form of self-directed question rewriting during the process of figuring out how best to respond.
 
-While benchmarks exists for end-to-end LM systems with RAG \citep{NEURIPS2024_27245589,yang2024crag}, they can suffer from the same static benchmarking flaws LM knowledge evaluations have. 
-A primary cause of benchmark utility decay is the public and static nature of the test data. 
-Shifting to dynamic generative benchmarking constructed on-demand from trusted document corpora is one solution.
-This approach, exemplified by \citep{majurski2025generative,shashidhar2025yourbench,li2025autobencherdeclarativebenchmarkconstruction}, extends the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
+%While benchmarks exists for end-to-end LM systems with RAG \citep{NEURIPS2024_27245589,yang2024crag}, they can suffer from the same static benchmarking flaws LM knowledge evaluations have. 
+%A primary cause of benchmark utility decay is the public and static nature of the test data. 
+%Shifting to dynamic generative benchmarking constructed on-demand from trusted document corpora is one solution.
+%This approach, exemplified by \citep{majurski2025generative,shashidhar2025yourbench,li2025autobencherdeclarativebenchmarkconstruction}, extends the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
+%
+%%This paradigm empowers users to move beyond generic, one-size-fits-all benchmarks and create evaluations tailored to their specific needs; enabling  more accurate assessment of a model's utility for specific applications.
+%%For example, a law firm can generate a benchmark from its case files, a pharmaceutical company can test a model's knowledge of its latest research papers, and a software company can evaluate a model's ability to understand its proprietary codebase. 
+%A central tenet of this generative evaluation approach is benchmarks must be grounded in the provided source documents. 
+%This means that each question should be verifiably answerable using only the information contained in the source text. 
+%This grounding is critical because it shifts the object of evaluation from "what the model knows" (parametric knowledge) to "how the model reasons" over a given context. 
+%%Combined with varying levels of compute budget, benchmark-free methods like TreeEval~\citep{li2025treeeval} might serve dynamic context construction LM evaluation well, enabling an adaptive powerful "examiner" LM tasked with probing the target model for weaknesses given a topic. 
+%%TreeEval starts by generating initial questions, then dynamically generating follow up based on the initial response building a tree of inquiry, potentially using information sources the model under evaluation does not have access to, enhancing the evaluation asymmetry. 
+%%Combining generative benchmarking with document grounding evaluation critically important for next-gen LM system evaluation approaches. 
 
-%This paradigm empowers users to move beyond generic, one-size-fits-all benchmarks and create evaluations tailored to their specific needs; enabling  more accurate assessment of a model's utility for specific applications.
-%For example, a law firm can generate a benchmark from its case files, a pharmaceutical company can test a model's knowledge of its latest research papers, and a software company can evaluate a model's ability to understand its proprietary codebase. 
-A central tenet of this generative evaluation approach is benchmarks must be grounded in the provided source documents. 
-This means that each question should be verifiably answerable using only the information contained in the source text. 
-This grounding is critical because it shifts the object of evaluation from "what the model knows" (parametric knowledge) to "how the model reasons" over a given context. 
-Combined with varying levels of compute budget, benchmark-free methods like TreeEval~\citep{li2025treeeval} might serve dynamic context construction LM evaluation well, enabling an adaptive powerful "examiner" LM tasked with probing the target model for weaknesses given a topic. 
-TreeEval starts by generating initial questions, then dynamically generating follow up based on the initial response building a tree of inquiry, potentially using information sources the model under evaluation does not have access to, enhancing the evaluation asymmetry. 
-Combining generative benchmarking with document grounding evaluation critically important for next-gen LM system evaluation approaches. 
-
-
-%Literature Survey Notes for Acc Uplift
-%
-%
-%# RAG
-%
-%- General survey of RAG https://arxiv.org/pdf/2506.00054v1
-%- "CRAG-comprehensive rag benchmark"
-%- https://proceedings.neurips.cc/paper_files/paper/2024/file/27245589131d17368cccdfa990cbf16e-Paper-Datasets_and_Benchmarks_Track.pdf
-%- https://proceedings.neurips.cc/paper_files/paper/2024/file/db93ccb6cf392f352570dd5af0a223d3-Paper-Conference.pdf
-%
-%## RAG Query Expansion/Rewriting
-%From LM:
-%"The initial query provided by a user is often an imperfect expression of their underlying information need. It may be ambiguous, lack critical context, or use terminology that does not align with the target document corpus. A long-standing principle in information retrieval holds that transforming this initial query can lead to significant improvements in system performance. In the age of LLMs, this principle has been revitalized, with a growing body of research exploring the use of language models themselves to rewrite, expand, and refine queries before they are passed to a retrieval system."
-%
-%"The concept of modifying a user's query is not new. Classic information retrieval systems have long employed techniques like query expansion (QE), the process of reformulating a query to improve retrieval performance.1 This is often done by adding synonyms, related terms, or terms from pseudo-relevance feedback (i.e., terms from the top-retrieved documents of an initial search) to the original query, with the goal of increasing recall by bridging the lexical gap between the user's vocabulary and the corpus. Over time, these methods evolved into more sophisticated query reformulation techniques that combine syntactic and semantic information to suggest more helpful alternatives to the user, helping them avoid "thrashing" on minor variations of an unsuccessful query."
-%
-%Papers:
-%- This paper explores query expansion https://arxiv.org/html/2404.07221v2
-%- This paper explores query rewriting https://arxiv.org/pdf/2502.15009v1
-%- query rewriting for medical https://www.mdpi.com/2078-2489/12/10/402
-%- LM aided rewriting https://aclanthology.org/2023.findings-emnlp.398/
-%- Contextual Query Rewriting https://aclanthology.org/2023.acl-industry.58.pdf
-%- Contextual query rewriting https://www.amazon.science/publications/contextual-query-rewriting-cqr-natural-language-as-interface-for-dialog-state-tracking
-%- This paper does a compress step to improve rag answering performance turning retrive->answer into retrive->note->answer https://arxiv.org/html/2509.00877v1
-%
-%## RAG Grounding
-%- https://arxiv.org/html/2409.11242v1
-%"In this work, we propose Trust-Score—a novel holistic metric to exclusively evaluate the trustworthiness of LLMs for RAG. Trust-Score assesses an LLM across multiple dimensions: 1) The ability to discern which questions can be answered or refused based on the provided documents (Grounded Refusals);"
-%
-%
-%# Grounding In Documents
-%
-%- structured prompting for long legal documents https://arxiv.org/pdf/2509.02241v1
-%- AGREE grounding framework https://arxiv.org/pdf/2311.09533v3 
-%
-%
-%
-%# CoT improvements for accuracy
-%- MetaCoT for getting the model to figure out how to answer https://arxiv.org/pdf/2501.04682 this did not work under our testing, at least for the smaller less capable models. The separate rewrite and the evaluate tasks produced higher accuracy
-%- StepBack Prompting to improve reasoning performance https://arxiv.org/pdf/2310.06117
 
 
 
 
 \section{Methods}
 
-This work explores applying a RAG query rewrite/expansion to produce accuracy uplift on LM evaluation benchmarks. %on direct factual questions posed to LMs.
-Benchmarks like MMLU-pro evaluate knowledge by posing factual questions to models~\citep{wang2024mmlu}.
-To highlight the core problem, \Cref{fig:impact-of-context} shows the impact of context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study). 
-Queries without any supporting context produce mixed results (blue); \texttt{Question+Context}, in which the context contains the desired answer, performs well (red); and \texttt{Question+AFC} does not match the context-supported accuracy (green).
+This work explores applying RAG query rewrite/expansion techniques directly to questions posed to LMs, producing an accuracy uplift on evaluation benchmarks. %on direct factual questions posed to LMs.
+Benchmarks like MMLU-pro evaluate knowledge by posing factual questions~\citep{wang2024mmlu}.
+%To highlight the core problem, \Cref{fig:impact-of-context} shows the impact of context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study). 
+\Cref{fig:impact-of-context} shows the impact of context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study). 
+Queries without any supporting context produce mixed results (blue); \texttt{Question+Context}, in which the prepended context contains the desired answer, performs well (red); and \texttt{Question+AFC} does not match the context-supported accuracy (green).
 \begin{figure}[t!]
-	\vspace*{-1.5em}
+	\vspace*{-0.25em}
 	\centering
 	\includegraphics[width=0.75\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
 	\vspace{-0.8em}
@@ -437,10 +394,10 @@ Queries without any supporting context produce mixed results (blue); \texttt{Que
 \end{figure}
 However, as shown in \Cref{fig:hle-uplift}, using \texttt{AFC} to rewrite the question can both disambiguate what is being asked and fill in relevant background assumptions, producing robust accuracy gains. 
 This increase in performance does not rely on model weight knowledge (\texttt{gpt-oss-20b} is an adequate re-writer).
-Additionally, just prepending the \texttt{AFC} text before the question does not produce an equivalent accuracy uplift as shown in \Cref{fig:impact-of-rewrite} where evaluating the \texttt{Question+Answer-Free Context} under-performs the rewritten question.
-The act of interpretation during rewriting to clarify and disambiguate the question separately from attempting to answer it causes the uplift effect. 
+Additionally, just prepending the \texttt{AFC} text before the question does not produce an equivalent accuracy uplift as shown in \Cref{fig:impact-of-rewrite}, where \texttt{Question+Answer-Free Context} under-performs \texttt{Rewritten Question}.
+The accuracy uplift effect is caused by the act of interpretation during rewriting, via clarifying and disambiguating the question separately from attempting to answer it. 
 \begin{figure}[t!]
-	\vspace*{-1.5em}
+	\vspace*{-0.25em}
 	\centering
 	\includegraphics[width=0.75\columnwidth]{figs/qAFC_vs_RQ_gpt120b.pdf}
 	\vspace{-0.8em}
@@ -450,17 +407,19 @@ The act of interpretation during rewriting to clarify and disambiguate the quest
 	}
 	\vspace{-1.0em}   
 \end{figure}
-However, the question rewriting using \texttt{AFC} does not recover the full performance improvement of surfacing the grounding context which directly contains the correct answer.
+Its worth noting that question rewriting using \texttt{AFC} does not recover the full performance improvement of surfacing and prepending the grounding context which directly contains the correct answer.
 
 Prior work on RAG systems has demonstrated the utility of query expansion~\citep{wilson2025contextualizing} and prior work on generative benchmarking demonstrated a correlation between generated question length and model benchmark accuracy~\citep{majurski2025generative}.
 These two pieces of evidence indicate that applying rewriting to knowledge benchmarks would produce an uplift in accuracy, potentially by placing the LM under evaluation in the right "state of mind" to answer the question better.
 This work explores that trend and characterizes how well that effect generalizes, and provides some thoughts on why it might happen. 
 
+
+
 \subsection{Datasets \& Models}
 
-To explore the impact of question rewriting on LM benchmark performance, pairs of questions with associated context that provides the correct answer are required.
-While most RAG systems are designed to produce that type of information, validated reference data like that is in short supply. 
-Additionally, datasets from post model knowledge cutoff enables evaluating whether the observed effects stem from memorization/recall within the model weights, or whether the question disambiguation approach generalizes to new unseen knowledge. 
+To explore the impact of question rewriting on LM benchmark performance, dataset are required which contain pairs of questions with associated context which provides the correct answer.
+While most RAG systems are designed to produce that type of information, validated reference data is in short supply. 
+Additionally, datasets from post model knowledge cutoff enables evaluating whether the observed effect stems from memorization/recall within the model weights, or whether the question disambiguation approach generalizes to new unseen knowledge. 
 
 \Cref{tab:dataset_publication_cutoff} indicates which datasets were used in this study, and highlights the release data of the benchmark. 
 Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and the generative benchmarking data was new enough to be post knowledge cutoff for all models tested.
@@ -520,12 +479,13 @@ Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and the generative benc
 
 % HLE data sourceing https://www.futurehouse.org/research-announcements/hle-exam
 % Audited HLE dataset https://huggingface.co/datasets/futurehouse/hle-gold-bio-chem
-The originally published HLE dataset does not contains associated context with each question, however FutureHouse released manual validation for a subset of chemistry/biology questions with grounding literature~\citep{HleFutureHouse}.
-For our work, we only used the subset of HLE questions FutureHouse annotated as correctly answered and which had sufficient grounding information.
+The originally published HLE dataset does not contains associated context with each question.
+However, FutureHouse released manual validation for a subset of chemistry/biology questions with grounding literature~\citep{HleFutureHouse}.
+This work used that validated subset of the HLE questions FutureHouse annotated as correctly answered and which had sufficient grounding information.
 
 Evaluating the efficacy of query rewriting for LM benchmark evaluation requires two categories of models. 
 First the model doing the question rewriting, note this is not the same as the model under evaluation on the benchmark.
-We separate the question rewriting and the evaluation phases to ensure that all evaluation models are given the same rewritten questions to reduce system measurement noise. 
+We separate the question rewriting and the evaluation phases to ensure that all evaluation models are given the same rewritten questions to reduce measurement noise. 
 Second are the set of models we evaluated using the rewritten questions; these span a wide range of size and capability.
 \Cref{tab:model_cutoff} outlines the models we evaluated the rewritten question benchmarks against. 
 
@@ -586,21 +546,21 @@ Second are the set of models we evaluated using the rewritten questions; these s
 
 \subsection{Question rewrite procedure}
 
-The question rewriting and expansion was approached as a pre-processing step before benchmarking the evaluation models using the modified questions. 
+The question rewriting and expansion was approached as a pre-processing step before benchmarking the evaluation models against the modified questions. 
 We evaluated three different LMs for question rewriting: small \texttt{gpt-oss-20b}, medium \texttt{gpt-oss-120b}, and large \texttt{Qwen3-235B-A22B-Instruct-2507}.
 These are indicated in \Cref{tab:model_cutoff} with bold.
-For each question in each dataset the rewriting LM was provided the original question, correct answer, and grounding context and prompted to (\Cref{apx:rewrite-prompt}) write the question to disambiguate what was being asked.
-In addition to rewriting the question the model must generate what it thinks the correct answer should be, this serves as a validation check against topic drift.
-This results in three variants of each question being generated, one for each of the rewriting models being evaluations (bold models in \Cref{tab:model_cutoff}).
+For each question in each dataset the rewriting LM was provided the original question, correct answer, and grounding context during prompting (\Cref{apx:rewrite-prompt}) to rewrite the question to disambiguate what was being asked.
+In addition to rewriting the question the rewriting model must generate what it thinks the correct answer should be, this serves as a validation check against topic drift.
+This results in three rewritten variants of each question, one for each of the rewriting models being tested for their ability to successfully perform the rewrite (bold models in \Cref{tab:model_cutoff}).
 
-With the questions rewritten, we filter them to ensure no degenerate questions are included. 
-An LM-as-a-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question giveaway score, original question giveaway score.
-The reformatted question and answer similarities scores are used to discard any questions which are too dissimilar to the original.
+We filter the rewritten questions to ensure that no degenerate questions are included in the final benchmark.
+An LM-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question giveaway score, original question giveaway score.
+The reformatted question and answer similarity scores are used to discard any questions which are too dissimilar to the original.
 The giveaway scores are used to remove any reformatted questions which got easier in the process of rewriting. 
-I.e. if the reformatted giveaway score is higher (the answer is given away more in the question) than the original question, that entry is discarded.
-This produces a new benchmark for each of the rewriting models that is strictly more difficult than the original.
+I.e. if the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
+This produces a new benchmark for each of the rewriting models that should be strictly more difficult than the original, but with disambiguated questions.
 
-
+% TODO continue editing
 
 \subsection{Evaluation methodology}
 
