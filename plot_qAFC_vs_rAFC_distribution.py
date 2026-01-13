@@ -34,7 +34,6 @@ from scipy.stats import gaussian_kde
 #     '#8c6d31',  # dark brown
 #     '#843c39',  # dark red
 #     '#7b4173',  # dark purple
-#     '#17becf',  # cyan (repeat for more variety)
 #     '#bc80bd',  # lavender
 #     '#ffed6f',  # yellow
 #     '#1b9e77',  # teal
@@ -47,11 +46,28 @@ from scipy.stats import gaussian_kde
 
 
 # Create a list of 3 maximally visually separable colors for plotting
+# plot_colors = [
+#     '#1f77b4',  # blue
+#     '#d62728',  # red
+#     '#2ca02c',  # green
+# ]
+
 plot_colors = [
-    '#1f77b4',  # blue
+    # '#393b79',  # dark blue
     '#d62728',  # red
     '#2ca02c',  # green
+    '#1f77b4',  # blue
+    # '#ffa655',  # orange
+    # '#17becf',  # cyan
+    '#00ffff',  # cyan
 ]
+
+# plot_colors = [
+# '#E69F00', # orange
+# '#56B4E9', # Sky Blue
+# '#009E73',  # blueish green
+# '#CC79A7'  # redish purple
+# ]
 
 
 impact_of_giveaway = dict()
@@ -68,11 +84,21 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
             context_type = 'orig'
             context_str = ""
         
+        base_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig')
         qAFC_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig-giveaway')
+        giveaway_question_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig-giveaway')
         rAFC_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-reformat')  # logs-oe-gpt120b-afc-filtered-reformat
         rAFC_giveaway_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-reformat-giveaway')
         # qAFC_giveaway_folder = os.path.join(main_dir, f'logs-oe-{generating_model_name}{context_str}-filtered-orig-giveaway')
 
+        if os.path.exists(base_question_folder):
+            q_logs = [fn for fn in os.listdir(base_question_folder) if fn.endswith('.json')]
+        else:
+            q_logs = []
+        if os.path.exists(giveaway_question_folder):
+            qC_logs = [fn for fn in os.listdir(giveaway_question_folder) if fn.endswith('.json')]
+        else:
+            qC_logs = []
         if os.path.exists(qAFC_folder):
             qAFC_logs = [fn for fn in os.listdir(qAFC_folder) if fn.endswith('.json')]
         else:
@@ -87,14 +113,17 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
             rAFC_giveaway_logs = []
 
 
-        for log_type in ['ref', 'rewrite', 'giveaway']:
+        for log_type in ['ref', 'refC', 'rewrite', 'refAFC']:
             if log_type == 'ref':
-                logs = qAFC_logs
-                question_folder = qAFC_folder
+                logs = q_logs
+                question_folder = base_question_folder
+            elif log_type == 'refC':
+                logs = qC_logs
+                question_folder = giveaway_question_folder
             elif log_type == 'rewrite':
                 logs = rAFC_logs
                 question_folder = rAFC_folder
-            elif log_type == 'giveaway':
+            elif log_type == 'refAFC':
                 logs = rAFC_giveaway_logs
                 question_folder = rAFC_giveaway_folder
             else:
@@ -111,8 +140,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
-                # d_fp = d_fp.replace('mmajursk','mmajurski')
-                d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
+                d_fp = d_fp.replace('mmajursk','mmajurski')
+                # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
 
@@ -139,18 +168,22 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                             impact_of_giveaway[dataset_name][orig_question]['models'][model_name] = dict()
                         if context_type == 'orig':
                             if log_type == 'ref':
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['ref_acc'] = acc  # Q+C
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['Q_acc'] = acc
+                            elif log_type == 'refC':
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['QC_acc'] = acc
                             elif log_type == 'rewrite':
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['rewrite_acc'] = acc  # R
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['R_acc'] = acc
                             else:
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['giveaway_acc'] = acc  # R+C
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['RC_acc'] = acc
                         else:
                             if log_type == 'ref':
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['ref_acc_afc'] = acc
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['Q_acc_afc'] = acc
+                            elif log_type == 'refC':
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['QAFC_acc_afc'] = acc
                             elif log_type == 'rewrite':
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['rewrite_acc_afc'] = acc
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['R_acc_afc'] = acc 
                             else:
-                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['giveaway_acc_afc'] = acc
+                                impact_of_giveaway[dataset_name][orig_question]['models'][model_name]['RAFC_acc_afc'] = acc
                                 
 
 
@@ -169,33 +202,28 @@ for dataset_name, questions in impact_of_giveaway.items():
         models = sub_data['models']
         for model_name, scores in models.items():
             if model_name not in model_scores:
-                model_scores[model_name] = {'ref_accs': [], 'giveaway_accs': [], 'rewrite_accs': [], 'ref_accs_afc': [], 'giveaway_accs_afc': [], 'rewrite_accs_afc': []}
-            if 'ref_acc' in scores and 'giveaway_acc' in scores and 'rewrite_acc' in scores:
-                model_scores[model_name]['ref_accs'].append(scores['ref_acc'])
-                model_scores[model_name]['giveaway_accs'].append(scores['giveaway_acc'])
-                model_scores[model_name]['rewrite_accs'].append(scores['rewrite_acc'])
-            if 'ref_acc_afc' in scores and 'giveaway_acc_afc' in scores and 'rewrite_acc_afc' in scores:
-                model_scores[model_name]['ref_accs_afc'].append(scores['ref_acc_afc'])
-                model_scores[model_name]['giveaway_accs_afc'].append(scores['giveaway_acc_afc'])
-                model_scores[model_name]['rewrite_accs_afc'].append(scores['rewrite_acc_afc'])
+                model_scores[model_name] = {'Q_accs': [], 'QC_accs': [], 'QAFC_accs': [], 'R_accs_afc': []}
+            
+            if 'Q_acc' in scores and 'QC_acc' in scores and 'QAFC_acc_afc' in scores and 'R_acc_afc' in scores:
+                model_scores[model_name]['Q_accs'].append(scores['Q_acc'])
+                model_scores[model_name]['QC_accs'].append(scores['QC_acc'])
+                model_scores[model_name]['QAFC_accs'].append(scores['QAFC_acc_afc'])
+                model_scores[model_name]['R_accs_afc'].append(scores['R_acc_afc'])
     
     # Compute averages for each model
     for model_name, score_lists in model_scores.items():
-        if len(score_lists['ref_accs']) > 0:
-            avg_ref_acc = sum(score_lists['ref_accs']) / len(score_lists['ref_accs'])
-            avg_giveaway_acc = sum(score_lists['giveaway_accs']) / len(score_lists['giveaway_accs'])
-            avg_rewrite_acc = sum(score_lists['rewrite_accs']) / len(score_lists['rewrite_accs'])
-            avg_ref_acc_afc = sum(score_lists['ref_accs_afc']) / len(score_lists['ref_accs_afc'])
-            avg_giveaway_acc_afc = sum(score_lists['giveaway_accs_afc']) / len(score_lists['giveaway_accs_afc'])
-            avg_rewrite_acc_afc = sum(score_lists['rewrite_accs_afc']) / len(score_lists['rewrite_accs_afc'])
+        if len(score_lists['Q_accs']) > 0:
+            avg_Q_accs = sum(score_lists['Q_accs']) / len(score_lists['Q_accs'])
+            avg_QC_accs = sum(score_lists['QC_accs']) / len(score_lists['QC_accs'])
+            avg_QAFC_accs = sum(score_lists['QAFC_accs']) / len(score_lists['QAFC_accs'])
+            avg_R_accs_afc = sum(score_lists['R_accs_afc']) / len(score_lists['R_accs_afc'])
+
             avg_uplift_per_model_dataset[dataset_name][model_name] = {
-                'avg_ref_acc': avg_ref_acc,
-                'avg_giveaway_acc': avg_giveaway_acc,
-                'avg_rewrite_acc': avg_rewrite_acc,
-                'avg_ref_acc_afc': avg_ref_acc_afc,
-                'avg_giveaway_acc_afc': avg_giveaway_acc_afc,
-                'avg_rewrite_acc_afc': avg_rewrite_acc_afc,
-                'num_questions': len(score_lists['ref_accs'])
+                'avg_Q_accs': avg_Q_accs,
+                'avg_QC_accs': avg_QC_accs,
+                'avg_QAFC_accs': avg_QAFC_accs,
+                'avg_R_accs_afc': avg_R_accs_afc,
+                'num_questions': len(score_lists['Q_accs'])
             }
 
 
@@ -229,13 +257,11 @@ all_models.sort()
 for m_idx, model_name in enumerate(all_models):            
 
     
-    model_acc_vals_q = []
-    model_acc_vals_r = []
-    model_acc_vals_r_giveaway = []
-    model_acc_vals_q_afc = []
-    model_acc_vals_r_afc = []
-    model_acc_vals_r_giveaway_afc = []
-
+    model_Q_accs = []
+    model_QC_accs = []
+    model_QAFC_accs = []
+    model_R_accs_afc = []
+    
     
     # Plot data points for each dataset
     for d_idx, dataset_name in enumerate(all_datasets):
@@ -246,25 +272,23 @@ for m_idx, model_name in enumerate(all_models):
         
         if model_name in models:
             # Collect the three accuracy types to plot their histograms side-by-side
-            model_acc_vals_q.append(models[model_name]['avg_ref_acc'])  # Q+C
-            model_acc_vals_r.append(models[model_name]['avg_rewrite_acc']) # R
-            model_acc_vals_r_giveaway.append(models[model_name]['avg_giveaway_acc']) # R+C
-
-            model_acc_vals_q_afc.append(models[model_name]['avg_ref_acc_afc']) # Q+AFC
-            model_acc_vals_r_afc.append(models[model_name]['avg_rewrite_acc_afc']) # R
-            model_acc_vals_r_giveaway_afc.append(models[model_name]['avg_giveaway_acc_afc']) # R+AFC
+            model_Q_accs.append(models[model_name]['avg_Q_accs'])
+            model_QC_accs.append(models[model_name]['avg_QC_accs'])
+            model_QAFC_accs.append(models[model_name]['avg_QAFC_accs']) 
+            model_R_accs_afc.append(models[model_name]['avg_R_accs_afc'])
+            
             
 
     # After looping over datasets, plot all three distributions as side-by-side histograms
-    data_to_plot = [model_acc_vals_q, model_acc_vals_r]#, model_acc_vals_r_giveaway]
-    labels = ["Question + Context", "Rewritten Question"]#, "Rewritten Question + Context"]
-    colors = [plot_colors[0], plot_colors[1], plot_colors[2]]
+    data_to_plot = [model_Q_accs, model_QC_accs, model_QAFC_accs, model_R_accs_afc]
+    labels = ["Question", "Question + Context", "Question + Anser-Free Context", "Rewritten Question"]
+    colors = [plot_colors[0], plot_colors[1], plot_colors[2], plot_colors[3]]
 
     bins = np.linspace(0, 1, 16)
     bar_width = (bins[1] - bins[0]) / 4  # Make bars beside, not stacked or overlapping
     rwidth = bar_width * 16
 
-    plt.figure(figsize=(4, 2.5))    
+    plt.figure(figsize=(4, 3))    # 2.5
     # Plot a smoothed PDF for each set of accuracy values
     from scipy.stats import gaussian_kde
 
@@ -297,60 +321,10 @@ for m_idx, model_name in enumerate(all_models):
     
     
     # Save the plot
-    os.makedirs(f'./imgs/impact_of_context/qC_vs_rC', exist_ok=True)
-    plt.savefig(f'./imgs/impact_of_context/qC_vs_rC/{model_name}.svg', dpi=300, bbox_inches='tight')
+    os.makedirs(f'./imgs/impact_of_context', exist_ok=True)
+    plt.savefig(f'./imgs/impact_of_context/{model_name}.svg', dpi=300, bbox_inches='tight')
     plt.close()
 
-
-    # After looping over datasets, plot all three distributions as side-by-side histograms
-    data_to_plot = [model_acc_vals_q_afc, model_acc_vals_r_afc]#, model_acc_vals_r_giveaway_afc]
-    labels = ["Question + Answer-Free Context", "Rewritten Question"]#, "Rewritten Question + Answer-Free Context"]
-    colors = [plot_colors[0], plot_colors[1], plot_colors[2]]
-
-    bins = np.linspace(0, 1, 16)
-    bar_width = (bins[1] - bins[0]) / 4  # Make bars beside, not stacked or overlapping
-    rwidth = bar_width * 16
-
-    plt.figure(figsize=(4, 2.5))    
-    # Plot a smoothed PDF for each set of accuracy values
-    
-
-    x_grid = np.linspace(0, 1, 200)
-    mv_Y  = 0.0
-    for i, vals in enumerate(data_to_plot):
-        if len(vals) > 1:
-            kde = gaussian_kde(vals)
-            pdf = kde(x_grid)
-            mv_Y = max(mv_Y, np.max(pdf))
-            plt.plot(
-                x_grid,
-                pdf,
-                label=labels[i],
-                color=colors[i],
-                alpha=0.8,
-                linewidth=3,
-            )
-            plt.fill_between(x_grid, pdf, color=colors[i], alpha=0.2)
-        elif len(vals) == 1:
-            # Draw a spike since kde needs > 1 point
-            plt.axvline(vals[0], color=colors[i], label=labels[i], alpha=0.85, linewidth=2)
-        # else, skip if empty
-    plt.gca().set_yticks([])
-    # Add 10% padding to the top of the plot to prevent legend overlap
-    plt.ylim(0, mv_Y * 1.8)
-
-    plt.legend(loc='upper left')
-    plt.title('Impact of Context on Benchmark Accuracy')
-    plt.xlabel('Benchmark Accuracy Distribution \n Over All Datasets (Gaussian KDE)')
-    plt.ylabel('')  # Remove units/label from the y-axis
-    # plt.ylabel('Density')
-    plt.tight_layout()
-    
-    
-    # Save the plot
-    os.makedirs(f'./imgs/impact_of_context/qAFC_vs_rAFC', exist_ok=True)
-    plt.savefig(f'./imgs/impact_of_context/qAFC_vs_rAFC/{model_name}.svg', dpi=300, bbox_inches='tight')
-    plt.close()
 
 print(f"Scatterplots saved for {len(all_models)} models")
 

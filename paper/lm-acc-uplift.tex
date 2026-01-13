@@ -68,6 +68,8 @@
 \usepackage{csquotes} % Context-sensitive quotation marks 
 \MakeOuterQuote{"}
 \usepackage{lipsum}
+\usepackage{appendix}
+\AtBeginEnvironment{appendices}{\crefalias{section}{appendix}}
 
 \newenvironment{packed_enum}{
 \begin{enumerate}
@@ -183,7 +185,7 @@ showstringspaces=false,tabsize=2,breaklines=true}
 
 
 \author{%
-Michael Majurski$^{12*}$ \quad Cynthia Matuszek$^{2}$\\
+Michael Majurski$^{1,2*}$ \quad Cynthia Matuszek$^{2}$\\
 $^1$National Institute of Standards and Technology \quad $^2$University of Maryland Baltimore County\\
 \texttt{michael.majurski@nist.gov}\\
 \texttt{cmat@umbc.edu}\\
@@ -205,23 +207,25 @@ $^1$National Institute of Standards and Technology \quad $^2$University of Maryl
 % rewrite = 0.372
 
 \begin{abstract}
-How eloquently, clearly, and unambiguously one phrases a question has profound impacts on the quality of the response.
-%This concept applies equally well to students and factual questions posed to Language Models (LMs). 
-This principle applies as much to Language Models (LMs) as it does to human students.
-%LM capability continues to advance and a plethora of benchmarks have been developed (at great expense) to assess model capability. 
-While model capabilities continue to advance, often evaluated through expensive, static benchmarks, the interplay between grounding context and query formulation remains under-explored.
-This work investigates how the quality of background grounding information in a model's context window affects accuracy. 
-%This work investigates the interplay between the quality of the background grounding information in the LM context window and the quality of the resulting answer.
-We find that combining well grounded dynamic context construction (i.e. RAG) with query rewriting reduces question ambiguity, resulting in significant accuracy gains.
-%Specifically, given a user question with associated grounding context which does not contain the answer, rewriting the question to reduce ambiguity produces benchmark accuracy uplift, even compared to just prepending that context before the question.
-Specifically, given a user question with associated answer-free grounding context, rewriting the question to reduce ambiguity produces benchmark accuracy uplift; even compared to just prepending that context before the question.
-% Specifically, we introduce Answer-Free Context (AFC): grounding information that is relevant to a query but does not contain the answer. 
-% By using \texttt{gpt-oss-20b} to rewrite questions based on AFC, we improved \texttt{gpt-5-mini} accuracy on a subset of Humanity’s Last Exam (HLE) from 0.14 to 0.37. 
-% We demonstrate that this "accuracy uplift" cannot be recovered through simple prompting at inference time; rather, distinct rewriting and answering phases are required to fully leverage the grounding information.
-Using \texttt{gpt-oss-20b} to rewrite a subset of Humanity's Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
-We demonstrate that this accuracy uplift cannot be fully recovered just through prompting at inference time; rather, distinct rewriting and answering phases are required.
-% TODO fill in before final camera ready
-%	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
+	How carefully and unambiguously a question is phrased has a profound impact on the quality of the response, for 
+	%This concept applies equally well to students and factual questions posed to Language Models (LMs). 
+	Language Models (LMs) as well as people.
+	%LM capability continues to advance and a plethora of benchmarks have been developed (at great expense) to assess model capability. 
+	While model capabilities continue to advance, 
+	% often evaluated on expensive, static benchmarks, 
+	the interplay between grounding context and query formulation remains under-explored.
+	This work investigates how the quality of background grounding information in a model's context window affects accuracy. 
+	%This work investigates the interplay between the quality of the background grounding information in the LM context window and the quality of the resulting answer.
+	We find that combining well-grounded dynamic context construction (i.e. RAG) with query rewriting reduces question ambiguity, resulting in significant accuracy gains.
+	%Specifically, given a user question with associated grounding context which does not contain the answer, rewriting the question to reduce ambiguity produces benchmark accuracy uplift, even compared to just prepending that context before the question.
+	Given a user question with associated answer-free grounding context, rewriting the question to reduce ambiguity produces benchmark improvements, even compared to prepending that context before the question.
+	% Specifically, we introduce Answer-Free Context (AFC): grounding information that is relevant to a query but does not contain the answer. 
+	% By using \texttt{gpt-oss-20b} to rewrite questions based on AFC, we improved \texttt{gpt-5-mini} accuracy on a subset of Humanity’s Last Exam (HLE) from 0.14 to 0.37. 
+	% We demonstrate that this "accuracy uplift" cannot be recovered through simple prompting at inference time; rather, distinct rewriting and answering phases are required to fully leverage the grounding information.
+	Using \texttt{gpt-oss-20b} to rewrite a subset of Humanity's Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
+	We demonstrate that this accuracy uplift cannot be fully recovered just through prompting at inference time; rather, distinct rewriting and answering phases are required.
+	% TODO fill in before final camera ready
+	%	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
 \end{abstract}
 
 
@@ -234,21 +238,21 @@ We demonstrate that this accuracy uplift cannot be fully recovered just through 
 %Users often implicitly assume that an LLM shares their mental model, including their background knowledge, context, and intent. This leads them to omit critical information when formulating a query, believing it to be self-evident. The LLM, however, operates on the statistical patterns in its training data and the explicit text of the prompt. When faced with an underspecified query, it must make an assumption to generate a response. If the model's chosen assumption does not align with the user's unstated intent, the resulting answer—while potentially factually correct under that assumed interpretation—will be perceived by the user as incorrect, irrelevant, or even as a "hallucination".
 
 
-The ongoing explosion of Language Model (LM) capability is largely a consequence of scaling laws, which have demonstrated relationships between performance and parameter count, dataset size, and compute. 
-This capability growth has opened a widening chasm between what modern LMs can demonstrably do and how we measure it's spiky intelligence. 
-
+The ongoing explosion of Language Model (LM) capability is largely a consequence of scaling laws, which have demonstrated relationships between performance and parameter count, dataset size, and computation. 
+This capability growth has opened a widening chasm between what modern LMs can demonstrably do and how we measure their spiky intelligence. 
+% 
 % Standard benchmarks serve as the primary engine for measuring progress, yet human-curated static evaluations are often brittle. 
 %A recurring issue is that users (and benchmark prompts) implicitly assume an LLM shares their mental model, intent, and background knowledge. 
 %When critical context is omitted, the LLM must rely on training patterns to fill the gaps. If its internal assumptions diverge from the user's unstated intent, the resulting output—while potentially factually sound—is perceived as incorrect or irrelevant.
-
-Leaderboard style benchmarks have been a primary engine, motivator, and evaluator of progress in machine learning; providing an objective scalable way to measure and compare capabilities. 
-Human curated static benchmarking is a brittle Gold Standard.
+% 
+Leaderboard-style benchmarks have been a primary engine and evaluator of progress in machine learning, providing an objective scalable way to measure and compare capabilities. 
+However, human-curated static benchmarking is a brittle standard.
 \begin{figure}[t!]
 	%	\vspace*{-1.0em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/fig1.jpg}
+	\includegraphics[width=0.8\columnwidth]{figs/fig1.jpg}
 	\vspace{-0.5em}
-	\caption{When RAG systems surface relevant information but not the answer, LM performance can be enhanced by disambiguating the question using context.}
+	\caption{When RAG systems surface relevant information, LM performance can be enhanced by rewriting the initial query using \textit{context}---added information that, without providing the answer, gives relevant background knowledge and direction.}
 	\label{fig:figure1}
 	\vspace{-1em}   
 \end{figure}
@@ -259,7 +263,8 @@ Human curated static benchmarking is a brittle Gold Standard.
 	\vspace{-0.5em}
 	\caption{Rewriting questions 
 		%using \texttt{gpt-oss-20b} 
-		using answer-free grounding context yields significant accuracy improvement over the original questions as evaluated on a subset of Humanity's Last Exam (HLE). Our intuition is that this approach is similar to asking a student to restate the question before answering it.
+		using answer-free grounding context yields significant accuracy improvement (distance above line) over the original questions as evaluated on a subset of Humanity's Last Exam (HLE). 
+		%Our intuition is that this approach is similar to asking a student to restate the question before answering it.
 		%Questions rewritten by gpt-oss-20b using answer-free grounding context information demonstrate significant benchmark accuracy improvement over the original questions as evaluated on a subset of Humanity's Last Exam (HLE) where validated context information is available. 
 	}
 	\label{fig:hle-uplift}
@@ -268,13 +273,9 @@ Human curated static benchmarking is a brittle Gold Standard.
 LM users often implicitly assume the LM shares their mental model, including their background knowledge, context, and intent.
 This can cause them to omit critical background and related information when formulating a query, believing it to be self-evident.
 % If its internal assumptions diverge from the user's unstated intent, the resulting output—while potentially factually sound—is perceived as incorrect or irrelevant.
-The LM, lacking this context, operates on training data patterns and the explicit text of the prompt. %the patterns in its training data and the explicit text of the prompt. 
+The model, lacking this context, operates instead on training data patterns and the explicit text of the prompt. 
 When faced with an under-specified query, it must make assumptions to generate a response.
-If the model's chosen assumptions do not align with the user's unstated intent, the resulting answer (while potentially factually correct under that assumed interpretation) will be perceived by the user as incorrect, or irrelevant.%, or even as a "hallucination".
-
-While LMs undeniably possess considerable general knowledge; they can struggle with domain-specific or proprietary data absent from public training sets. 
-In professional and enterprise workflows, system performance depends on Retrieval-Augmented Generation (RAG) to dynamically construct context for the LM based upon user queries~\citep{lewis2020retrieval,NEURIPS2024_db93ccb6}.
-However, current RAG evaluation focuses on retrieval ranking~\citep{yang2024crag,NEURIPS2024_27245589} rather than how models utilize retrieved documents; information which might be relevant without explicitly contain the answer.
+If these assumptions do not align with the user's unstated intent, the resulting answer (while potentially factually correct under that assumed interpretation) will be perceived as incorrect or irrelevant.%, or even as a "hallucination".
 
 %LMs undeniably possess considerable general knowledge; but are inherently weaker with domain-specific and proprietary information. 
 %%Operating in professional domains with specialized 
@@ -286,16 +287,16 @@ However, current RAG evaluation focuses on retrieval ranking~\citep{yang2024crag
 %Contemporary evaluation of Retrieval-Augmented Generation (RAG) systems focuses on ranking quality and retrieval performance~\citep{yang2024crag,NEURIPS2024_27245589} with less emphasis on how to best utilize the retrieved information.
 %LM+RAG evaluation is accurate if RAG surfaces the correct answer, but if only relevant information sans answer is retrieved, performance suffers. 
 
-In this work, we explore the impact on system performance of Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer.
+In this work, we explore the impact on system performance of adding Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer.
 %Our methodology explores how retrieved information impacts LM+RAG system performance; both when the correct answer is surfaced and when only related background information is found.
 %document grounded (i.e. LM+RAG) system performance when either the correct answer is surfaced or when only related background information is found. %, as well as when only background relevant information is surfaced.
 %Additionally, we demonstrate benchmark accuracy improvement using a contextually grounded question disambiguation rewrite as shown in \Cref{fig:figure1}.
-We demonstrate that even when RAG fails to surface a direct answer, the retrieved background information can be used to perform a contextually grounded disambiguation rewrite (\Cref{fig:figure1}). 
-This process improves an underspecified query before it is posed to the answering model.
+We demonstrate that even when RAG fails to surface a direct answer, the retrieved background information can be used to perform a contextually grounded disambiguation rewrite (\Cref{fig:figure1}) to improve an underspecified query before it is answered.
 %Our methodology extracts both additional benchmark accuracy and improved contextual grounding by performing a question disambiguation rewrite. 
 %This rewrite operates using Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer. 
 %Given a user question and associated \texttt{AFC}, an LM is used to disambiguate and rewrite the question before its posed to the LM for answering.
-An example of an original question, associated \texttt{AFC}, and rewritten question are shown below.
+This method can meaningfully improve accuracy on a subset of Humanity's Last Exam (HLE) (\Cref{fig:hle-uplift}).
+An example of an original question, associated \texttt{AFC}, and rewritten question are shown below. 
 
 \begin{mdframed}[style=spacedframe]
 	%	\small
@@ -303,7 +304,7 @@ An example of an original question, associated \texttt{AFC}, and rewritten quest
 	\footnotesize
 	\textbf{Original question:} What kind of lasers are crystals of zinc suflde used in?
 	
-	\noindent\textbf{Answer-free context:} Zinc chloride is often added to lumber as a fire retardant and can be used as a wood preservative. It is also used to make other chemicals. Zinc methyl (Zn(CH3)2) is used in a number of organic syntheses. Zinc sulfide (ZnS) is used in luminescent pigments such as on the hands of clocks, X-ray and television screens, and luminous paints. Crystals of ZnS are used in lasers. Zinc sulfate is a chemical in dyes and pigments. Zinc pyrithione is used in antifouling paints.
+	\noindent\textbf{Answer-free context:} Zinc chloride is often added to lumber as a fire retardant and can be used as a wood preservative. It is also used to make other chemicals. Zinc methyl (CH\textsubscript{3}Zn) is used in a number of organic syntheses. Zinc sulfide (ZnS) is used in luminescent pigments such as on the hands of clocks, X-ray and television screens, and luminous paints. Crystals of ZnS are used in lasers. Zinc sulfate is a chemical in dyes and pigments. Zinc pyrithione is used in antifouling paints.
 	
 	\noindent\textbf{Rewritten question:} Which portion of the electromagnetic spectrum do lasers that incorporate zinc sulfide (ZnS) crystals generally operate in?
 	
@@ -311,20 +312,16 @@ An example of an original question, associated \texttt{AFC}, and rewritten quest
 \end{mdframed}
 
 % Our methodology for extracting both additional benchmark accuracy and improved contextual grounding via question disambiguation rewrites that make use of Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the answer. 
-As shown in \Cref{fig:hle-uplift}, this method can improve \texttt{gpt-5-mini} accuracy on a subset of Humanity's Last Exam (HLE) from 0.14 to 0.37. %0.14 on the original questions to 0.37 on the rewritten questions.
+% As shown in \Cref{fig:hle-uplift}, this method can improve \texttt{gpt-5-mini} accuracy on a subset of Humanity's Last Exam (HLE) from 0.14 to 0.37. 
+%0.14 on the original questions to 0.37 on the rewritten questions.
 %\Cref{fig:hle-uplift} demonstrates the improvement this method provides on a subset of Humanity's Last Exam with validated grounding context, showing \texttt{gpt-5-mini} improving from an accuracy of 0.14 on the original questions to 0.37 on the rewritten questions.
 
 
-\noindent This work makes the following contributions:
+\noindent This work makes the following contributions:\vspace{0.5ex}
 \begin{packed_enum}
-%	\item We explore the impact on LM system accuracy of the RAG surfacing the correct answer vs only background information;
-%	\item We demonstrate that leveraging \texttt{AFC} for question rewriting can improve model performance; and %answer-free background context for question disambiguation to improve model accuracy; and
-%%	\item We compare and contrast simply prepending surfaced dynamic context against using that information for question disambiguation, demonstrating that question rewriting out-performs context prepending.
-%%	\item We show that using surfaced context for question disambiguation and rewriting out-performs prepending that information before the question.
-%\item We show that this performance uplift requires a distinct rewriting phase and cannot be recovered by simply prepending context to the query.%, suggesting that reducing prompt ambiguity is a unique and necessary step for maximizing LLM utility.
-\item Analyzes the performance differential in RAG systems when retrieving direct answers versus purely auxiliary background information; 
-\item Introduces a method for leveraging Answer-Free Context (\texttt{AFC}) to disambiguate queries, yielding significant accuracy gains; and 
-\item Demonstrates that this accuracy uplift necessitates a distinct rewriting phase, as it cannot be replicated by simply prepending the retrieved context to a prompt. 
+	\item Introduces a method for leveraging Answer-Free Context (\texttt{AFC}) to disambiguate queries, yielding significant accuracy gains;
+	\item Analyzes the performance differential in RAG systems when retrieving direct answers versus purely auxiliary background information; and
+	\item Demonstrates that this accuracy uplift necessitates a distinct rewriting phase, and cannot be replicated by simply prepending the retrieved context to a prompt. 
 \end{packed_enum}
 
 
@@ -334,31 +331,36 @@ As shown in \Cref{fig:hle-uplift}, this method can improve \texttt{gpt-5-mini} a
 
 % (maybe) talk in related works about the disconnect between HLE type benchmarks where the model just has to answer, and when tool use (i.e. internet) is available. In modern RAG finding and surfacing relevant and on topic informatino about the question can provide significant alpha. But that requires shifrting the evaluation target from a Model (+tools) to the Model+RAG dynamic context engine system. That second more complex system with grounding documents is much harder to evaluate than an LM in isolation. 
 
+While LMs possess considerable general knowledge, they can struggle with domain-specific or proprietary data absent from public training sets. 
+In professional and enterprise workflows, system performance depends on Retrieval-Augmented Generation (RAG) to dynamically construct context for the LM based upon user queries~\citep{lewis2020retrieval,NEURIPS2024_db93ccb6}.
+However, current RAG evaluation focuses on retrieval ranking~\citep{yang2024crag,NEURIPS2024_27245589} rather than how models \textit{utilize} retrieved documents---information that might be relevant without explicitly containing the answer.
 
 While LMs store significant parametric knowledge, their responses are not grounded in reliable external information sources. %without additional components their responses are not grounded in reliable external information source.
-Dynamic context construction approaches like RAG address this by fetching external evidence during the generation process \citep{sharma2025retrieval}.
-Grounding the LM response in external (non-parametric) data significantly improves factual accuracy \citep{sharma2025retrieval}.
-The RAG pipeline introduces its own optimization challenges, spanning document chunking, search, ranking \citep{NEURIPS2024_db93ccb6}, and post-retrieval processing \citep{dai2025evinote}.
-A particularly critical component, with a long history in information retrieval, is the transformation, expansion, and normalization of the users query \citep{Rastogi2019,rivas2014study}.
+Dynamic context construction approaches like RAG address this by retrieving external evidence during the generation process~\citep{sharma2025retrieval}.
+Grounding LM responses in external data significantly improves factual accuracy~\citep{sharma2025retrieval}.
+The RAG pipeline introduces its own optimization challenges, spanning document chunking, search, ranking~\citep{NEURIPS2024_db93ccb6}, and post-retrieval processing~\citep{dai2025evinote}.
+A particularly critical component, with a long history in information retrieval, is the transformation, expansion, and normalization of user queries~\citep{Rastogi2019,rivas2014study}.
 
-The initial user query is often an imperfect expression of the underlying information need, suffering from ambiguity, missing context, or terminology poorly aligned with the target document corpus. 
-To bridge this lexical gap, modern RAG systems, like their classic predecessors, can employ query expansion and rewriting \citep{jagerman2023query,zhou2023unified,li2024dmqr}.
+The initial user query is often an imperfect expression of the information needed, suffering from ambiguity, missing context, or poorly aligned terminology with a target document corpus. 
+To bridge this lexical gap, modern RAG systems employ query expansion and rewriting~\citep{jagerman2023query,zhou2023unified,li2024dmqr}.
 Query expansion reformulates the question to better surface relevant documents and improve the signal-to-noise ratio of the retrieved context~\citep{gao2023retrieval}.
 %The goal is to reformulate the query to better surface relevant documents and improve the signal-to-noise ratio of the retrieved context.
+% 
+LMs have proven adept at this rewriting, expansion, and contextualization task, disambiguating queries using carefully designed prompts~\citep{wilson2025contextualizing,gao2023retrieval,sun2025picos}. 
+Other approaches explore post-RAG retrieval optimizations for improving signal to noise in the surfaced documents, shifting from a retrieval-generate paradigm to retrieval-note-generate in which the discovered documents are summarized into high level notes~\citep{dai2025evinote}.
 
-LMs have proven adept at this rewriting, expansion, and contextualization task; disambiguating queries using carefully designed prompts \citep{wilson2025contextualizing,gao2023retrieval,sun2025picos}. 
-Other approaches explore post RAG retrieval optimizations for improving signal to noise in the surfaced documents, shifting from a retrieve-generate paradigm to retrieve-note-generate where the discovered documents are summarized into high level notes \citep{dai2025evinote}.
+Other dynamic context strategies focus on getting the most out of the context.
+For example, Step-Back Prompting attempts to have LMs derive high-level concepts from first principles to guide reasoning in query answering~\citep{zheng2023take}.
+Frameworks like AGREE have the LM cite its sources within the context window (drawn from grounding documents)~\citep{ye2023effective}.
+Other approaches involve extensions to chain-of-thought, including Meta-CoT, which models how to determine what underlying reasoning is required to arrive at a particular CoT~\citep{xiang2025towards}.
+CoT-type reasoning approaches enable the LM to employ self-directed question rewriting during the process of figuring out how best to respond; \textcolor{red}{Our work differs from this in that...}
+% TODO respond to the above comment
 
-Other dynamic context strategies focus on getting the most out of the documents placed within the LM context.
-For example, Step-Back Prompting attempts to have LMs derive high-level concepts from first principles to guide reasoning in query answering \citep{zheng2023take}.
-Frameworks like AGREE have the LM cite its sources within the context window (drawn from grounding documents) \citep{ye2023effective}.
-Other approaches involve extensions to chain-of-thought including Meta-CoT which models how to determine what underlying reasoning is required to arrive at a particular CoT \citep{xiang2025towards}.
-CoT type reasoning approaches enable the LM to employ some form of self-directed question rewriting during the process of figuring out how best to respond.
 
-%While benchmarks exists for end-to-end LM systems with RAG \citep{NEURIPS2024_27245589,yang2024crag}, they can suffer from the same static benchmarking flaws LM knowledge evaluations have. 
+%While benchmarks exists for end-to-end LM systems with RAG~\citep{NEURIPS2024_27245589,yang2024crag}, they can suffer from the same static benchmarking flaws LM knowledge evaluations have. 
 %A primary cause of benchmark utility decay is the public and static nature of the test data. 
 %Shifting to dynamic generative benchmarking constructed on-demand from trusted document corpora is one solution.
-%This approach, exemplified by \citep{majurski2025generative,shashidhar2025yourbench,li2025autobencherdeclarativebenchmarkconstruction}, extends the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
+%This approach, exemplified by~\citep{majurski2025generative,shashidhar2025yourbench,li2025autobencherdeclarativebenchmarkconstruction}, extends the evaluation landscape by making it possible to create private, domain-specific, and temporally relevant assessments that are inherently resistant to contamination.
 %
 %%This paradigm empowers users to move beyond generic, one-size-fits-all benchmarks and create evaluations tailored to their specific needs; enabling  more accurate assessment of a model's utility for specific applications.
 %%For example, a law firm can generate a benchmark from its case files, a pharmaceutical company can test a model's knowledge of its latest research papers, and a software company can evaluate a model's ability to understand its proprietary codebase. 
@@ -373,56 +375,52 @@ CoT type reasoning approaches enable the LM to employ some form of self-directed
 
 
 
-\section{Methods}
+\section{Methodology}
 
-This work explores applying RAG query rewrite/expansion techniques directly to questions posed to LMs, producing an accuracy uplift on evaluation benchmarks. %on direct factual questions posed to LMs.
-Benchmarks like MMLU-pro evaluate knowledge by posing factual questions~\citep{wang2024mmlu}.
-%To highlight the core problem, \Cref{fig:impact-of-context} shows the impact of context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study). 
-\Cref{fig:impact-of-context} shows the impact of context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study). 
-Queries without any supporting context produce mixed results (blue); \texttt{Question+Context}, in which the prepended context contains the desired answer, performs well (red); and \texttt{Question+AFC} does not match the context-supported accuracy (green).
+This work explores applying RAG query rewrite/expansion techniques directly to queries posed to LMs, which results in an accuracy uplift on evaluation benchmarks. Benchmarks routinely evaluate knowledge by posing factual questions~\citep{wang2024mmlu}. \Cref{fig:impact-of-context} shows the impact of added context on \texttt{gpt-oss-120b}'s performance (across all datasets used in this study), and demonstrates that naively adding \texttt{AFC} without rewriting the query to be clearer and less ambiguous does not improve the results as significantly as desired.
+% Queries without any supporting context produce mixed results (blue); \texttt{Question+Context}, in which the prepended context contains the desired answer, perform well (red); and \texttt{Question+AFC} does not match the context-supported accuracy (green). 
 \begin{figure}[t!]
 	\vspace*{-0.25em}
 	\centering
-	\includegraphics[width=0.75\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
+	\includegraphics[width=0.8\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
 	\vspace{-0.8em}
 	{\small
-		\caption{The quality of context information presented to the question answering LM has a drastic impact on system performance. Accuracy is high when RAG systems correctly surface context with the answer (red), but when the question is presented without context (blue) or the surfaced information does not contain the answer (green), benchmark performance suffers.}
+		\caption{The quality of context presented to an LM has an impact on question-answering performance. Accuracy is high when RAG systems correctly surface context containing the answer (\textcolor{green}{green}), but when the question is presented without context (\textcolor{red}{red}) or the surfaced information does not contain the answer (\textcolor{blue}{blue}), performance (without query rewriting) suffers. The act of interpretation during question rewriting (\textcolor{cyan}{cyan}) produces an accuracy uplift beyond just prepending the \texttt{Question+Answer-Free} \texttt{Context} information used to rewrite before the question.}
 		\label{fig:impact-of-context}
 	}	
-	\vspace{-1.0em}   
-	
+	\vspace{-1.0em} 
 \end{figure}
 However, as shown in \Cref{fig:hle-uplift}, using \texttt{AFC} to rewrite the question can both disambiguate what is being asked and fill in relevant background assumptions, producing robust accuracy gains. 
-This increase in performance does not rely on model weight knowledge (\texttt{gpt-oss-20b} is an adequate re-writer).
-Additionally, just prepending the \texttt{AFC} text before the question does not produce an equivalent accuracy uplift as shown in \Cref{fig:impact-of-rewrite}, where \texttt{Question+Answer-Free Context} under-performs \texttt{Rewritten Question}.
-The accuracy uplift effect is caused by the act of interpretation during rewriting, via clarifying and disambiguating the question separately from attempting to answer it. 
-\begin{figure}[t!]
-	\vspace*{-0.25em}
-	\centering
-	\includegraphics[width=0.75\columnwidth]{figs/qAFC_vs_RQ_gpt120b.pdf}
-	\vspace{-0.8em}
-	{\small
-		\caption{The act of interpretation during question rewriting produces an accuracy uplift beyond just prepending the \texttt{Answer-Free Context} information used to rewrite before the question.}
-		\label{fig:impact-of-rewrite}
-	}
-	\vspace{-1.0em}   
-\end{figure}
-Its worth noting that question rewriting using \texttt{AFC} does not recover the full performance improvement of surfacing and prepending the grounding context which directly contains the correct answer.
+% 
+% This increase in performance does not rely on model weight knowledge (\texttt{gpt-oss-20b} is an adequate re-writer).
+Just prepending the \texttt{AFC} text before the question does not produce an equivalent accuracy uplift as shown in \Cref{fig:impact-of-context}, where \texttt{Question+Answer-Free} \texttt{Context} under-performs \texttt{Rewritten} \texttt{Question}.
 
+We hypothesize that the accuracy improvement is caused by the act of interpretation during rewriting, via clarifying and disambiguating the question separately from attempting to answer it. 
+%\begin{figure}[t!]
+%	\vspace*{-0.25em}
+%	\centering
+%	\includegraphics[width=0.75\columnwidth]{figs/qAFC_vs_RQ_gpt120b.pdf}
+%	\vspace{-0.8em}
+%	{\small
+	%		\caption{The act of interpretation during question rewriting produces an accuracy uplift beyond just prepending the \texttt{Question+Answer-Free} \texttt{Context} information used to rewrite before the question. \textcolor{orange}{As commented, I think these two graphs should be merged and then we can just concatenate the captions}}
+	%		\label{fig:impact-of-rewrite}
+	%	}
+%	\vspace{-1.0em}   
+%\end{figure}
+It is worth noting that question rewriting using \texttt{AFC} does not recover the full performance improvement of adding context which directly contains the correct answer.
+% 
 Prior work on RAG systems has demonstrated the utility of query expansion~\citep{wilson2025contextualizing} and prior work on generative benchmarking demonstrated a correlation between generated question length and model benchmark accuracy~\citep{majurski2025generative}.
-These two pieces of evidence indicate that applying rewriting to knowledge benchmarks would produce an uplift in accuracy, potentially by placing the LM under evaluation in the right "state of mind" to answer the question better.
-This work explores that trend and characterizes how well that effect generalizes, and provides some thoughts on why it might happen. 
-
+Applying rewriting to knowledge benchmarks may produce an uplift in accuracy, potentially by placing the LM under evaluation in the right ``state of mind'' to answer the question better. We explore that trend and characterize how well the effect generalizes.
+% , and provides some thoughts on why it might happen. 
 
 
 \subsection{Datasets \& Models}
 
-To explore the impact of question rewriting on LM benchmark performance, dataset are required which contain pairs of questions with associated context which provides the correct answer.
-While most RAG systems are designed to produce that type of information, validated reference data is in short supply. 
-Additionally, datasets from post model knowledge cutoff enables evaluating whether the observed effect stems from memorization/recall within the model weights, or whether the question disambiguation approach generalizes to new unseen knowledge. 
-
-\Cref{tab:dataset_publication_cutoff} indicates which datasets were used in this study, and highlights the release data of the benchmark. 
-Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and the generative benchmarking data was new enough to be post knowledge cutoff for all models tested.
+To explore the impact of question rewriting on LM benchmark performance, datasets are needed that contain pairs of questions with associated context that provides the correct answer. While most RAG systems are designed to produce that type of information, validated reference data is in comparatively short supply, as benchmark creation across a variety of domains is historically an expensive and frequently manually intensive process. Additionally, in order to evaluate whether observed results stem from memorization/recall within the model, datasets are needed that contain information that postdates model training.
+% , or whether the question disambiguation approach generalizes to new unseen knowledge. 
+% 
+\Cref{tab:dataset_publication_cutoff} lists the datasets used in this study and gives the release data of the benchmark. 
+Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and generative benchmarking data was post knowledge cutoff for all models tested.
 
 \begin{table}[h!]
 	\centering
@@ -479,15 +477,16 @@ Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and the generative benc
 
 % HLE data sourceing https://www.futurehouse.org/research-announcements/hle-exam
 % Audited HLE dataset https://huggingface.co/datasets/futurehouse/hle-gold-bio-chem
-The originally published HLE dataset does not contains associated context with each question.
-However, FutureHouse released manual validation for a subset of chemistry/biology questions with grounding literature~\citep{HleFutureHouse}.
-This work used that validated subset of the HLE questions FutureHouse annotated as correctly answered and which had sufficient grounding information.
+The originally published HLE dataset does not contain associated context with each question.
+However, FutureHouse released manual validations for a subset of chemistry/biology questions with grounding literature~\citep{HleFutureHouse}.
+This work uses that validated subset of the HLE questions.
+% as correctly answered and which had sufficient grounding information.
 
-Evaluating the efficacy of query rewriting for LM benchmark evaluation requires two categories of models. 
-First the model doing the question rewriting, note this is not the same as the model under evaluation on the benchmark.
+Evaluating the efficacy of query rewriting for LM benchmark evaluation requires two categories of models.
+First is the model performing question rewriting (which is not the same as the model under evaluation).
 We separate the question rewriting and the evaluation phases to ensure that all evaluation models are given the same rewritten questions to reduce measurement noise. 
-Second are the set of models we evaluated using the rewritten questions; these span a wide range of size and capability.
-\Cref{tab:model_cutoff} outlines the models we evaluated the rewritten question benchmarks against. 
+Second are the set of models evaluated using the rewritten questions; these span a wide range of size and capability.
+\Cref{tab:model_cutoff} outlines the models we evaluated on the rewritten question benchmarks. 
 
 
 \begin{table}[h!]
@@ -544,46 +543,43 @@ Second are the set of models we evaluated using the rewritten questions; these s
 \end{table}
 
 
-\subsection{Question rewrite procedure}
+\subsection{Question Rewriting Procedure}
 
 The question rewriting and expansion was approached as a pre-processing step before benchmarking the evaluation models against the modified questions. 
-We evaluated three different LMs for question rewriting: small \texttt{gpt-oss-20b}, medium \texttt{gpt-oss-120b}, and large \texttt{Qwen3-235B-A22B-Instruct-2507}.
-These are indicated in \Cref{tab:model_cutoff} with bold.
+We evaluated three different LMs for question rewriting: \texttt{gpt-oss-20b} (small), \texttt{gpt-oss-120b} (medium), and \texttt{Qwen3-235B-A22B-Instruct-2507} (large).
+% These are indicated in \Cref{tab:model_cutoff} in bold.
 For each question in each dataset the rewriting LM was provided the original question, correct answer, and grounding context during prompting (\Cref{apx:rewrite-prompt}) to rewrite the question to disambiguate what was being asked.
-In addition to rewriting the question the rewriting model must generate what it thinks the correct answer should be, this serves as a validation check against topic drift.
-This results in three rewritten variants of each question, one for each of the rewriting models being tested for their ability to successfully perform the rewrite (bold models in \Cref{tab:model_cutoff}).
+In addition to rewriting the question the rewriting model must generate the correct answer, which serves as a validation check against topic drift.
+This results in three rewritten variants of every question, one for each of the rewriting models (bold models in \Cref{tab:model_cutoff}).
 
 We filter the rewritten questions to ensure that no degenerate questions are included in the final benchmark.
-An LM-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question giveaway score, original question giveaway score.
+An LM-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question `giveaway' score, and original question `giveaway' score.
 The reformatted question and answer similarity scores are used to discard any questions which are too dissimilar to the original.
-The giveaway scores are used to remove any reformatted questions which got easier in the process of rewriting. 
-I.e. if the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
-This produces a new benchmark for each of the rewriting models that should be strictly more difficult than the original, but with disambiguated questions.
+The `giveaway' scores are used to remove any reformatted questions which got easier in the process of rewriting: If the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
+This produces a new, strictly more difficult benchmark for each of the rewriting models, with disambiguated questions.
 
 
 
 \subsection{Evaluation methodology}
 
-%To evaluate the benchmark accuracy uplift provided by question rewriting and expansion 
-Evaluating the efficacy of query rewriting grounded in context requires benchmarking each model under evaluation for three configurations:
-{\renewcommand\labelenumi{(\theenumi)}
-	\begin{enumerate*} %packed_enum   enumerate
-		\item Original Question: the normal benchmarking use case, 
-		\item Original Question with Context Prepended: the RAG retrieval use case, and 
-		\item Rewriten Question: the uplift imparted by rewriting.
-	\end{enumerate*}
-}
+Evaluating the accuracy uplift provided by question rewriting and expansion 
+% Evaluating the efficacy of query rewriting grounded in context 
+requires benchmarking each model under evaluation for three configurations:
+\begin{enumerate*}[label=(\arabic*)]
+	\item Original Question: the normal benchmarking use case, 
+	\item Original Question with Context Prepended: the RAG retrieval use case, and 
+	\item Rewritten Question: the improvement imparted by rewriting.
+\end{enumerate*}
+% 
+To quantify the accuracy uplift, we compute the following average per-model and per-dataset differences:
+\begin{packed_enum} 
+	\item (Rewritten Question - Original Question): the direct rewrite improvement, 
+	\item (Rewritten Question - Original Question with Context Prepended): the rewrite improvement compared to RAG retrieval
+\end{packed_enum}
 
-To quantify the accuracy uplift, we compute the following average per-model and per-dataset differences.
-{\renewcommand\labelenumi{(\theenumi)}
-	\begin{enumerate*} 
-		\item Rewriten Question - Original Question: the direct rewrite uplift, 
-		\item Rewriten Question - Original Question with Context Prepended: the rewrite uplift compared to the RAG retrieval use case
-	\end{enumerate*}
-}
-This comparison between the rewritten question and the original question with the context prepended enables evaluating whether the rewrite outperforms benchmarking models with a RAG database which contains only background information.
-However, if the context contains the answer, one would expect any benchmarking with the context included to yield roughly 100\% accuracy.
-To mitigate this we developed a version of each grounding context that is "Answer-Free". 
+\noindent This comparison between the rewritten question and the original question with the context prepended enables evaluation of whether the rewrite outperforms benchmarking models with a RAG database which contains only background information.
+However, if the context contains the answer, one would expect any benchmarking with the context included to yield very high accuracy.
+To mitigate this we developed a version of each grounding context that is ``Answer-Free''. 
 \texttt{AFC} was developed using a single LM (\texttt{gpt-oss-120b}) to rewrite the context (see \Cref{apx:afc} for the prompt).
 The results section covers the accuracy uplift using the original context (the less interesting use case) as well as the Answer-Free Context (\texttt{AFC}).
 \texttt{AFC} replicates the use case where a RAG system surfaces background information, but not the actual answer to the users question. 
@@ -671,7 +667,7 @@ Additionally, some datasets like \texttt{flashrag\_fermi} demonstrate significan
 
 Breaking out the benchmark accuracy uplift results per-dataset reveals an interesting exception, comparing the rewritten HLE-subset to the original questions with the answer-free context prepended demonstrates the only consistent drop in accuracy, as shown in \Cref{fig:r_minus_q_afc_giveaway_dataset}.
 In \Cref{fig:r_minus_q_afc_giveaway_dataset} the first 5 datasets are from post knowledge cutoff, and the remainder before. 
-Additionally, due to a paucity of datasets released since the beginning of the year, all but the HLE-subset were generativly created benchmarks using wither \citep{majurski2025generative} or \citep{shashidhar2025yourbench}.
+Additionally, due to a paucity of datasets released since the beginning of the year, all but the HLE-subset were generativly created benchmarks using either~\citep{majurski2025generative} or~\citep{shashidhar2025yourbench}.
 Those benchmarks tend to have more complex questions that are less fact based than the extractive QA datasets which make up the majority. 
 Thus, they demonstrate minimal benchmark accuracy uplift from rewriting compared to just prepending the answer-free context.
 This trend extends to the HLE-subset which has the most complex and difficult questions over all the datasets.
@@ -770,10 +766,12 @@ Interestingly enough, the rewritten question with AFC usually out-performs the o
 	\bibliography{references}
 }
 
-\newpage
-\appendix
-\input{appendix}
-
+\begin{appendices}
+	\crefalias{section}{appendix}
+	\newpage
+	\appendix
+	\input{appendix}\textbf{}
+\end{appendices}
 
 \end{document}
 
