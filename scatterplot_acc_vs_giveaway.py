@@ -64,7 +64,8 @@ plot_markers = [
 ]
 
 
-for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+# for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
     for question_source in ['orig', 'reformat']:
         for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
             
@@ -116,8 +117,8 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
-                    # d_fp = d_fp.replace('mmajursk','mmajurski')
-                    d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
+                    d_fp = d_fp.replace('mmajursk','mmajurski')
+                    # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -264,22 +265,22 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
 
             # Create legend for colors (datasets)
             handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
-            labels_color = [f"{m}" for m in all_models]
+            labels_color = [f"{m.replace('-FP8','')}" for m in all_models]
             # legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='small')  #x-small
             if dataset_fldr.endswith('-afc'):
                 loc = "upper left"
             else:
-                loc = "center right"
+                loc = "lower right"
                 
             legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc=loc, fontsize='x-small')  #x-small  
 
             # Create legend for markers (models)
             handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
-            labels_marker = [f"{d}" for d in all_datasets]
+            labels_marker = [f"{d.replace('Short','')}" for d in all_datasets]
             if dataset_fldr.endswith('-afc'):
                 loc = "lower right"
             else:
-                loc = "lower right"
+                loc = "lower center"
             legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc=loc, fontsize='x-small') # x-small  
 
             # Add both legends
@@ -289,9 +290,9 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU',
             
             
             # Save the plot
-            os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
-            plt.savefig(f'./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg', dpi=300, bbox_inches='tight')
+            os.makedirs(f'./imgs2/{dataset_fldr}', exist_ok=True)
+            plt.savefig(f'./imgs2/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg', dpi=300, bbox_inches='tight')
             plt.close()
 
             print(f"Scatterplots saved for {len(all_models)} models")
-            print(f"   fp = ./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")
+            print(f"   fp = ./imgs2/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")

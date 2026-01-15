@@ -72,6 +72,7 @@ plot_markers = [
 ]
 
 valid_model_list = ['gpt-oss-20b', 'gpt-oss-120b', 'gemma-3-4b-it', 'Qwen3-1.7B']
+# valid_model_list = ['gpt-oss-120b']
 
 #for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc', 'data-subset-500-afc']:
 for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:

@@ -1,3 +1,4 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
 \documentclass[11pt]{article}
 
 % Change "review" to "final" to generate the final (sometimes called camera-ready) version.
@@ -44,7 +45,6 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage[dvipsnames]{xcolor}
-
 \usepackage[inline]{enumitem}
 \usepackage{makecell}
 \usepackage{fancyhdr}       % header
@@ -554,9 +554,10 @@ In addition to rewriting the question the rewriting model must generate the corr
 This results in three rewritten variants of every question, one for each of the rewriting models (bold models in \Cref{tab:model_cutoff}).
 
 We filter the rewritten questions to ensure that no degenerate questions are included in the final benchmark.
-An LM-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question `giveaway' score, and original question `giveaway' score.
+An LM-Judge is used to extract the following properties: reformatted question similarity to the original question, reformatted answer similarity to the original answer, reformatted question ``giveaway'' score, and original question ``giveaway'' score.
 The reformatted question and answer similarity scores are used to discard any questions which are too dissimilar to the original.
-The `giveaway' scores are used to remove any reformatted questions which got easier in the process of rewriting: If the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
+The giveaway scores rate how much the answer was given away (or contained within) the question.
+The giveaway scores are used to remove any reformatted questions which got easier in the process of rewriting: If the reformatted giveaway score is higher than the original question (the answer is given away more in the rewritten question), that entry is discarded.
 This produces a new, strictly more difficult benchmark for each of the rewriting models, with disambiguated questions.
 
 
@@ -609,11 +610,6 @@ In other words, the rewritten question appears to place the model closer to the 
 %Critique: Did the model actually rewrite the question in its output? Or did it skip that step?
 %Fix: Briefly mention if you verified that the models actually performed the rewrite step in the trace. If they did rewrite it but still failed to improve, the argument for "Task Separation" is much stronger.
 
-
-%TODO The "Giveaway" Terminology:
-%Issue: The term "Giveaway" is colloquial and slightly confusing in the axis labels and text.
-%Fix: Standardize on "Answer-Containing Context" (ACC) and "Answer-Free Context" (AFC). In plots, use labels like Orig + ACC vs Orig + AFC.
-
 %TODO Embeddings Argument:The original text regarding the embeddings ($y=x$ lines, quadrants) was difficult to parse. The core insight is simply: Semantic Alignment correlates with Accuracy. Keep it simple.
 
 While improving \texttt{gpt-5-mini} performance on HLE-subset is remarkable (\Cref{fig:hle-uplift}), this section evaluates the impact of query disambiguation via Answer-Free Context for all models (\Cref{tab:model_cutoff}) and datasets (\Cref{tab:dataset_publication_cutoff}) across three dimensions:
@@ -635,7 +631,7 @@ This confirms that models successfully utilize answer information when present w
 \begin{figure}[h!]
 	\vspace*{-0.5em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/data-subset-500-gpt120b-orig-giveaway.pdf}
+	\includegraphics[width=0.9\columnwidth]{figs/gpt120b-orig-giveaway.pdf}
 	\vspace{-0.8em}
 	\caption{Scatterplot of benchmark accuracy per-dataset and per-model showing the original question accuracy vs the original question prepended with the answer-containing context, resulting in significant over-performance.}
 	\label{fig:orig-giveaway}
@@ -648,7 +644,7 @@ Consequently, any accuracy uplift observed in subsequent experiments can be attr
 \begin{figure}[h!]
 	%	\vspace{-1.0em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/data-subset-500-afc-gpt120b-orig-giveaway.pdf}
+	\includegraphics[width=0.9\columnwidth]{figs/afc-gpt120b-orig-giveaway.pdf}
 	\vspace{-0.8em}
 	\caption{Scatterplot of benchmark accuracy per-dataset and per-model showing the original question accuracy vs the original question prepended with the answer-free context, resulting in no trend of accuracy improvement attributable to the context.}
 	\label{fig:orig-giveaway-afc}
@@ -679,7 +675,7 @@ This demonstrates question rewriting broadly improves benchmark accuracy. %the r
 %\Cref{fig:gpt120b-afc} showcases the results from all datasets before model knowledge cutoffs. 
 %All dataset and model combinations lie above the $y=x$ line which indicates identical performance between the original and rewritten questions. 
 %Some dataset model combinations get more uplift than others, but there are no combinations where benchmark performance decreases. 
-\Cref{fig:gpt120b-afc} further breaks this down by dataset, showing that all (model,dataset) combinations fall above the identity line ($y=x$), confirming that rewriting never degrades performance relative to the original query (at the benchmark level) for datasets before the knowledge cutoff.
+\Cref{fig:gpt120b-afc} further breaks this down by dataset, showing that most (model,dataset) combinations fall above the identity line ($y=x$), confirming that rewriting rarely degrades performance relative to the original query (at the benchmark level), and never degrades performance for any dataset pre model knowledge cutoff.
 \begin{figure}[h!]
 	\vspace{-0.5em}
 	\centering
@@ -690,7 +686,7 @@ This demonstrates question rewriting broadly improves benchmark accuracy. %the r
 	%	\vspace{-1em}   
 \end{figure}
 Additionally, some datasets like \texttt{flashrag\_fermi} demonstrate significant uplift stemming from disambiguation.
-\FloatBarrier
+
 
 \paragraph{Comparison to RAG Baselines}
 Considering the rewritten questions likely contain more detailed information drawn from context, comparing them directly against the original is not a fair comparison. 
@@ -707,7 +703,7 @@ This demonstrates that the act of rewriting the questions in a separate rewrite-
 	\centering
 	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/rafc_minus_qafc_giveaway.pdf}
 	\vspace{-0.8em}
-	\caption{Violin plots of the per-dataset per-model difference in benchmark accuracy between the rewritten questions and the original questions with associated answer-free context. The violin plot distribution highlights the range of accuracy deltas over all datasets for each model evaluated.}
+	\caption{Per-dataset per-model difference in benchmark accuracy between the rewritten questions and the original questions with associated answer-free context. The violin plot distribution highlights the range of accuracy deltas over all datasets for each model evaluated.}
 	\label{fig:r_minus_q_afc_giveaway}
 	\vspace{-1em}   
 \end{figure}
@@ -715,15 +711,15 @@ This demonstrates that the act of rewriting the questions in a separate rewrite-
 
 
 \paragraph{The Reasoning Gap}  % Also term it something like post-data cutoff. We can disambiguate between this being an effect of datasets in the training population, or whether teh generative and HLE benchmarks are less fact-heavy.
-A notable exception is observed in less fact-based benchmarks, specifically the HLE-subset and generative benchmarks. 
+A notable exception is observed in less fact-based (more reasoning intensive) benchmarks, specifically the HLE-subset and generative benchmarks. 
 As detailed in \Cref{fig:r_minus_q_afc_giveaway_dataset}, these datasets show no consistent improvement when comparing \texttt{Rewrite\_Q} to \texttt{Orig\_Q+AFC}. 
-While rewriting improves over the bare \texttt{Orig\_Q} query, more complex reasoning tasks benefit more from having the full raw context available in the window during inference than from a condensed rewritten query. 
+While rewriting improves over the isolated \texttt{Orig\_Q} query, more complex reasoning tasks benefit more from having the full raw context available in the window during inference than from a condensed rewritten query. 
 \begin{figure}[h!]
 	\vspace{-0.5em}
 	\centering
 	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/rafc_minus_qafc_giveaway_dataset.pdf}
 	\vspace{-0.8em}
-	\caption{Violin plots of the per-dataset per-model difference in benchmark accuracy between the rewritten questions and the original questions with associated answer-free context. The violin plot distribution highlights the range of accuracy deltas over all models for each dataset evaluated.}
+	\caption{Per-dataset per-model difference in benchmark accuracy between the rewritten questions and the original questions with associated answer-free context. The violin plot distribution highlights the range of accuracy deltas over all models for each dataset evaluated.}
 	\label{fig:r_minus_q_afc_giveaway_dataset}
 	\vspace{-1em}   
 \end{figure}
@@ -733,29 +729,28 @@ Additionally, due to a paucity of datasets released since the beginning of the y
 Those benchmarks tend to have more complex questions that are less fact based than the extractive QA datasets which make up the majority. 
 Unfortunately, the datasets available for this study have two conflated effects.
 The less fact-based benchmarks (generative and HLE-subset) are also those datasets post knowledge cutoff. 
-So this lack of improvement from rewriting might stem from a model data memorization effect, or from the questions requiring more reasoning and less direct recall. % being less fact-based.
+So this lack of improvement from rewriting might stem from a model data memorization effect, or from the questions requiring more reasoning and less direct recall.
 This indicates a divergence in optimal strategies with factual disambiguation favoring a rewrite and more complex queries favoring raw context inclusion.
 
-However, combining both strategies yields the highest performance. 
-\Cref{fig:rafc_giveaway_minus_qafc_giveaway_dataset} demonstrates that \texttt{Rewrite\_Q+AFC} outperforms \texttt{Orig\_Q+AFC}, particularly on the Fermi estimation dataset, confirming that disambiguation and context inclusion are complementary.
+However, combining both strategies limits the potential downsides to rewriting. %yields the highest performance. 
+\Cref{fig:rafc_giveaway_minus_qafc_giveaway_dataset} demonstrates that \texttt{Rewrite\_Q+AFC} limits the potential accuracy upside but reduces the number of datasets which show no average improvement in accuracy.
+This might indicate that disambiguation and context inclusion are complementary.
 \begin{figure}[h!]
 	\vspace{-0.5em}
 	\centering
 	\includegraphics[width=0.9\columnwidth]{figs/acc_uplift_gpt120/rafc_giveaway_minus_qafc_giveaway_dataset.pdf}
 	\vspace{-0.8em}
-	\caption{Per-dataset improvement in benchmark accuracy from the Rewrite\_Q with AFC compared to the Orig\_Q with AFC during benchmark evaluation. This highlights that both the question rewriting and the addition of the answer-free context improve benchmark accuracy.}
+	\caption{Per-dataset improvement in benchmark accuracy from the Rewrite\_Q with AFC compared to the Orig\_Q with AFC during benchmark evaluation.}
 	\label{fig:rafc_giveaway_minus_qafc_giveaway_dataset}
 	%	\vspace{-1em}   
 \end{figure}
 
 
 
-
-
 \subsection{Mechanism of Action: Alignment and Task Separation} 
 %Our hypothesis is that the benchmark accuracy improvement from reformatting the questions with answer-free context stems from disambiguation and improving the concept alignment between the question and the underlying context information.
 To understand the source of the accuracy uplift, we analyze the semantic alignment between queries and context.
-\Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} plots the change in benchmark accuracy against the change in cosine similarity (embedded via \texttt{e5-mistral}) between the question and the context. 
+\Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} plots the change in benchmark accuracy against the change in cosine similarity (using \texttt{e5-mistral-7b-instruct}) between the question and the context. 
 We observe a positive correlation: rewritten questions systematically exhibit higher cosine similarity to the grounding context, and larger increases in similarity correlate with larger accuracy gains. 
 This effect shows up in \Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} with most points being in the upper-right quadrant, where improvements in benchmark accuracy correlate with improvements in cosine similarity between the question and context.
 In other words, rewritten questions that have a higher cosine similarities to the context also have a higher benchmark accuracy.
@@ -768,13 +763,13 @@ This suggests the rewriting process effectively aligns the query with the latent
 	\centering
 	\includegraphics[width=0.9\columnwidth]{figs/acc_vs_embedding_gpt120b_e5-mistral-7b-instruct.pdf}
 	\vspace{-0.8em}
-	\caption{Scatterplot plotting the benchmark accuracy improvement on the x-axis vs improvement in cosine similarity between the question and context for rewritten questions on the y-axis. The x-axis plots delta benchmark accuracy Rewrite\_Q - Orig\_Q. Larger values indicate the rewritten question improved benchmark accuracy. The y-axis plots the increase in cosine similarity between the question and context resulting from rewriting. Larger values indicate better alignment between Rewrite\_Q and AFC compared to Orig\_Q and AFC. That all points are in the upper right quadrant indicates that improvements in embedding alignment between the question and grounding context correlates with improvements benchmark accuracy.}
+	\caption{Scatterplot showing the benchmark accuracy improvement on the x-axis vs improvement in cosine similarity between the question and context for rewritten questions on the y-axis. The x-axis plots delta benchmark accuracy Rewrite\_Q - Orig\_Q. Larger values indicate the rewritten question improved benchmark accuracy. The y-axis plots the increase in cosine similarity between the question and context due to rewriting. Larger values indicate better alignment between Rewrite\_Q and AFC compared to Orig\_Q and AFC. That most points are in the upper right quadrant indicates that improvements in embedding alignment between the question and grounding context correlates with improvements benchmark accuracy.}
 	\label{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct}
 	%	\vspace{-1em}   
 \end{figure}
 
 Finally, we test whether this rewriting must be an explicit preprocessing step or if it can be induced via Chain-of-Thought (CoT). 
-We implemented an "In-Situ" baseline where the model is prompted to rewrite the question internally before answering. 
+We implemented an ``In-Situ'' baseline where the model is prompted to rewrite the question internally before answering. 
 \Cref{fig:insitu_rafc_minus_q_afc_giveaway_dataset} shows that the accuracy uplift disappears under this paradigm. 
 \begin{figure}[h!]
 	\vspace{-0.5em}
@@ -786,9 +781,9 @@ We implemented an "In-Situ" baseline where the model is prompted to rewrite the 
 	%	\vspace{-1em}   
 \end{figure}
 %The comparison is between the rewritten question and the original question with \texttt{AFC}, so identical information is available to the model.
-This holds both for models with \texttt{<thinking>} support and those without. 
+This holds regardless of whether the model supports \texttt{<thinking>} tags. 
 %This was evaluated by using the same question rewriting prompt lightly modified to tell the LM under evaluation to first rewrite the question for disambiguation before answering the rewritten question using the same formatting as all other LM benchmarking used in this study. 
-This was evaluated using the same question rewriting prompt lightly modified to have the LM under evaluation first rewrite for disambiguation before answering the rewritten question. 
+CoT rewriting was evaluated using the same prompt only lightly modified to have the LM under evaluation first rewrite for disambiguation before answering the rewritten question. 
 This result highlights the necessity of task separation: the cognitive load or context window dynamics of rewriting and answering in a single pass negates the benefits of disambiguation.
 
 
