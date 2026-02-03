@@ -355,7 +355,7 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
                 # d_fp = d_fp.replace('mmajursk','mmajurski')
-                d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
+                # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
 
@@ -454,7 +454,10 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
     
 
     # Create a scatterplot for each model
+    
     for embedding_model in embedding_models:
+        total_count = 0
+        ur_quad_count = 0
         plt.figure(figsize=(6, 6))
         figure_has_content = False
         for m_idx, model_name in enumerate(all_models):            
@@ -482,6 +485,12 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
                     # color = plot_colors[m_idx % len(plot_colors)]
                     color = plot_colors[d_idx % len(plot_markers)]
 
+                    total_count += int(delta_acc.size)
+                    m1 = delta_acc > 0
+                    m2 = delta_emb > 0
+                    m = np.logical_and(m1, m2)
+                    ur_quad_count += int(np.sum(m))
+
                     plt.scatter(np.mean(delta_acc), np.mean(delta_emb), 
                             marker=marker, color=color, 
                             s=80, 
@@ -491,6 +500,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
         if not figure_has_content:
             continue
+
+        print(f'Embedding Model {embedding_model} as {total_count} points, of which {ur_quad_count} are in UR quad')
             
         # Add grid and labels
         # plt.grid(True, alpha=0.3)

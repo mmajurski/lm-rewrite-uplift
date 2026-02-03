@@ -217,14 +217,14 @@ $^1$National Institute of Standards and Technology \quad $^2$University of Maryl
 	%This work investigates the interplay between the quality of the background grounding information in the LM context window and the quality of the resulting answer.
 	We find that combining well-grounded dynamic context construction (i.e. RAG) with query rewriting reduces question ambiguity, resulting in significant accuracy gains.
 	%Specifically, given a user question with associated grounding context which does not contain the answer, rewriting the question to reduce ambiguity produces benchmark accuracy uplift, even compared to just prepending that context before the question.
-	Given a user question with associated answer-free grounding context, rewriting the question to reduce ambiguity produces benchmark improvements, even compared to prepending that context before the question.
+	Given a user question with associated answer-free grounding context, rewriting the question to reduce ambiguity produces benchmark improvements always scored against the unmodified reference answer, even compared to prepending that context before the question.
 	% Specifically, we introduce Answer-Free Context (AFC): grounding information that is relevant to a query but does not contain the answer. 
 	% By using \texttt{gpt-oss-20b} to rewrite questions based on AFC, we improved \texttt{gpt-5-mini} accuracy on a subset of Humanity’s Last Exam (HLE) from 0.14 to 0.37. 
 	% We demonstrate that this "accuracy uplift" cannot be recovered through simple prompting at inference time; rather, distinct rewriting and answering phases are required to fully leverage the grounding information.
 	Using \texttt{gpt-oss-20b} to rewrite a subset of Humanity's Last Exam using answer-free grounding context improves \texttt{gpt-5-mini} accuracy from 0.14 to 0.37.
 	We demonstrate that this accuracy uplift cannot be fully recovered just through prompting at inference time; rather, distinct rewriting and answering phases are required.
 	% TODO fill in before final camera ready
-	%	Code is available at \url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
+	Code is available at [anonymous]. %\url{https://github.com/mmajurski/grounded-synth-lm-benchmark}
 \end{abstract}
 
 
@@ -252,7 +252,7 @@ However, human-curated static benchmarking is a brittle standard.
 	%\includegraphics[width=0.9\columnwidth]{figs/fig1.jpg}
 	%\includegraphics[width=0.9\columnwidth]{figs/fig1-v2.png}
 	\includegraphics[width=0.9\columnwidth]{figs/fig1-v3.jpg}
-	\vspace{-0.5em}
+	\vspace{-0.25em}
 	\caption{When RAG systems surface relevant information, LM performance can be enhanced by rewriting the initial query using \textit{context}---added information that, without providing the answer, gives relevant background knowledge and direction.}
 	\label{fig:architecture}
 	\vspace{-1em}   
@@ -260,7 +260,7 @@ However, human-curated static benchmarking is a brittle standard.
 \begin{figure}[b!]
 	\vspace*{-1.0em}
 	\centering
-	\includegraphics[width=0.8\columnwidth]{figs/gpt20b-afc_hle.pdf}
+	\includegraphics[width=0.95\columnwidth]{figs/gpt20b-afc_hle.pdf}
 	\vspace{-0.5em}
 	\caption{Rewriting questions 
 		%using \texttt{gpt-oss-20b} 
@@ -297,7 +297,8 @@ We demonstrate that even when RAG fails to surface a direct answer, the retrieve
 %This rewrite operates using Answer-Free Context (\texttt{AFC})---background information that is relevant to the question but which does not contain the actual answer. 
 %Given a user question and associated \texttt{AFC}, an LM is used to disambiguate and rewrite the question before its posed to the LM for answering.
 This method can meaningfully improve accuracy on a subset of Humanity's Last Exam (HLE) (\Cref{fig:hle-uplift}).
-An example of an original question, associated \texttt{AFC}, and rewritten question are shown below. 
+%An example of an original question, associated \texttt{AFC}, and rewritten question are shown below. 
+An example of an original question (from Squadv2~\citep{DBLP:journals/corr/abs-1806-03822}), associated \texttt{AFC}, and rewritten question are shown below. 
 
 \begin{mdframed}[style=spacedframe]
 	%	\small
@@ -383,7 +384,8 @@ This work explores applying RAG query rewrite/expansion techniques directly to q
 \begin{figure}[t!]
 	\vspace*{-0.25em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
+	% \includegraphics[width=0.9\columnwidth]{figs/impact_of_context_gpt-oss-120b.pdf}
+	\includegraphics[width=0.9\columnwidth]{figs/impact_of_context_dashed-gpt-oss-120b.pdf}
 	\vspace{-0.8em}
 	{\small
 		\caption{The quality of context presented to an LM has an impact on question-answering performance. Accuracy is highest when RAG systems correctly surface context containing the answer (\textcolor{cyan}{cyan}), but when the question is presented without context (\textcolor{orange}{orange}) or the surfaced information does not contain the answer (\textcolor{ForestGreen}{green}), performance (without query rewriting) suffers. The act of interpretation during question rewriting (\textcolor{Rhodamine}{pink}) produces an accuracy uplift beyond just prepending the \texttt{Question+Answer-Free} \texttt{Context} information used to rewrite before the question.}
@@ -436,7 +438,7 @@ Only Humanity's Last Exam (HLE)~\citep{HumanityLastExam} and generative benchmar
 		\textbf{Dataset} & \textbf{Release Date}  \\
 		Public Datasets & \\
 		\toprule
-		Humanity's Last Exam~\citep{HumanityLastExam} & Jan 2025\\
+		Humanity's Last Exam~\citep{HumanityLastExam} & 2025\\
 		\hline
 		Squadv2~\citep{DBLP:journals/corr/abs-1806-03822} & 2018 \\
 		\hline
@@ -591,8 +593,7 @@ This uplift effect is larger than just prepending the \texttt{AFC}.
 To characterize one hypothesis for why this affect shows up, we leverage an embedding model (\texttt{e5-mistral-7b-instruct}) to understand the change in cosine distance between the original question and the context compared to the cosine distance between the rewritten question and the context.
 We demonstrate that improvements in benchmark accuracy correlate with reductions in the cosine distance between the question and context.
 In other words, the rewritten question appears to place the model closer to the right frame of mind to answer the question, as the cosine distance between the question and the context is smaller after the rewrite.
-
-% TODO continue editing
+Regardless of whether the original or rewritten question is given to the LM under test, the correct answer is always defined by the benchmark dataset and is never modified by the rewriting process.
 
 
 
@@ -624,19 +625,20 @@ While improving \texttt{gpt-5-mini} performance on HLE-subset is remarkable (\Cr
 
 
 \subsection{Validation of Answer-Free Context} 
+
+\begin{figure}[h!]
+	\vspace*{-0.5em}
+	\centering
+	\includegraphics[width=0.95\columnwidth]{figs/gpt120b-orig-giveaway.pdf}
+	\vspace{-0.8em}
+	\caption{Scatterplot of benchmark accuracy per-dataset and per-model showing the original question accuracy vs the original question prepended with the answer-containing context, resulting in significant over-performance.}
+	\label{fig:orig-giveaway}
+	\vspace{-0.5em}   
+\end{figure}
 To attribute performance gains to query disambiguation rather than information leakage, we first verify that our Answer-Free Context does not inadvertently contain the answer to the benchmark question. 
 \Cref{fig:orig-giveaway} illustrates model benchmark performance when the correct answer is present in the context. 
 As expected, prepending answer-containing context yields a significant improvement in accuracy.
 This confirms that models successfully utilize answer information when present within the context.
-\begin{figure}[h!]
-	\vspace*{-0.5em}
-	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/gpt120b-orig-giveaway.pdf}
-	\vspace{-0.8em}
-	\caption{Scatterplot of benchmark accuracy per-dataset and per-model showing the original question accuracy vs the original question prepended with the answer-containing context, resulting in significant over-performance.}
-	\label{fig:orig-giveaway}
-	%	\vspace{-1em}   
-\end{figure}
 
 In contrast, \Cref{fig:orig-giveaway-afc} plots model performance when the \texttt{Answer-Free Context} is prepended to the original question. 
 The absence of consistent model over-performance lends evidence that the AFC creation process successfully removed the direct answer. 
@@ -644,11 +646,11 @@ Consequently, any accuracy uplift observed in subsequent experiments can be attr
 \begin{figure}[h!]
 	%	\vspace{-1.0em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/afc-gpt120b-orig-giveaway.pdf}
+	\includegraphics[width=0.95\columnwidth]{figs/afc-gpt120b-orig-giveaway.pdf}
 	\vspace{-0.8em}
 	\caption{Scatterplot of benchmark accuracy per-dataset and per-model showing the original question accuracy vs the original question prepended with the answer-free context, resulting in no trend of accuracy improvement attributable to the context.}
 	\label{fig:orig-giveaway-afc}
-	%	\vspace{-1em}   
+	\vspace{-1em}   
 \end{figure}
 \FloatBarrier
 
@@ -679,7 +681,7 @@ This demonstrates question rewriting broadly improves benchmark accuracy. %the r
 \begin{figure}[h!]
 	\vspace{-0.5em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/gpt120b-afc.pdf}
+	\includegraphics[width=0.95\columnwidth]{figs/gpt120b-afc.pdf}
 	\vspace{-0.8em}
 	\caption{Scatterplot showing the per-dataset per-model improvement in benchmark accuracy caused by rewriting the question. The x-axis shows the original question benchmark accuracy while the y-axis shows the rewritten question benchmark accuracy.}
 	\label{fig:gpt120b-afc}
@@ -711,7 +713,7 @@ This demonstrates that the act of rewriting the questions in a separate rewrite-
 
 
 \paragraph{The Reasoning Gap}  % Also term it something like post-data cutoff. We can disambiguate between this being an effect of datasets in the training population, or whether teh generative and HLE benchmarks are less fact-heavy.
-A notable exception is observed in less fact-based (more reasoning intensive) benchmarks, specifically the HLE-subset and generative benchmarks. 
+A notable exception is observed in less direct fact-recall (more reasoning intensive) benchmarks, specifically the HLE-subset and generative benchmarks. 
 As detailed in \Cref{fig:r_minus_q_afc_giveaway_dataset}, these datasets show no consistent improvement when comparing \texttt{Rewrite\_Q} to \texttt{Orig\_Q+AFC}. 
 While rewriting improves over the isolated \texttt{Orig\_Q} query, more complex reasoning tasks benefit more from having the full raw context available in the window during inference than from a condensed rewritten query. 
 \begin{figure}[h!]
@@ -728,7 +730,7 @@ In \Cref{fig:r_minus_q_afc_giveaway_dataset} the first 5 datasets are from post 
 Additionally, due to a paucity of datasets released since the beginning of the year, all but the HLE-subset were generatively created benchmarks using either~\citep{majurski2025generative} or~\citep{shashidhar2025yourbench}.
 Those benchmarks tend to have more complex questions that are less fact based than the extractive QA datasets which make up the majority. 
 Unfortunately, the datasets available for this study have two conflated effects.
-The less fact-based benchmarks (generative and HLE-subset) are also those datasets post knowledge cutoff. 
+The less direct fact-recall type benchmarks (generative and HLE-subset) are also those datasets post knowledge cutoff for all models (see \Cref{tab:dataset_publication_cutoff} and \Cref{tab:model_cutoff}. 
 So this lack of improvement from rewriting might stem from a model data memorization effect, or from the questions requiring more reasoning and less direct recall.
 This indicates a divergence in optimal strategies with factual disambiguation favoring a rewrite and more complex queries favoring raw context inclusion.
 
@@ -752,7 +754,7 @@ This might indicate that disambiguation and context inclusion are complementary.
 To understand the source of the accuracy uplift, we analyze the semantic alignment between queries and context.
 \Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} plots the change in benchmark accuracy against the change in cosine similarity (using \texttt{e5-mistral-7b-instruct}) between the question and the context. 
 We observe a positive correlation: rewritten questions systematically exhibit higher cosine similarity to the grounding context, and larger increases in similarity correlate with larger accuracy gains. 
-This effect shows up in \Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} with most points being in the upper-right quadrant, where improvements in benchmark accuracy correlate with improvements in cosine similarity between the question and context.
+This effect shows up in \Cref{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct} with most points ($91\%$ or 222 out of 243) being in the upper-right quadrant, where improvements in benchmark accuracy correlate with improvements in cosine similarity between the question and context.
 In other words, rewritten questions that have a higher cosine similarities to the context also have a higher benchmark accuracy.
 Its worth noting that for every model and dataset combination pre-knowledge cutoff these points all landed in the upper right quadrant.
 However, for some models in the post-knowledge cutoff datasets there is a drop in benchmark accuracy as evidenced by those points in the upper left quadrant. 
@@ -761,11 +763,11 @@ This suggests the rewriting process effectively aligns the query with the latent
 \begin{figure}[h!]
 	\vspace{-0.5em}
 	\centering
-	\includegraphics[width=0.9\columnwidth]{figs/acc_vs_embedding_gpt120b_e5-mistral-7b-instruct.pdf}
+	\includegraphics[width=0.95\columnwidth]{figs/acc_vs_embedding_gpt120b_e5-mistral-7b-instruct.pdf}
 	\vspace{-0.8em}
 	\caption{Scatterplot showing the benchmark accuracy improvement on the x-axis vs improvement in cosine similarity between the question and context for rewritten questions on the y-axis. The x-axis plots delta benchmark accuracy Rewrite\_Q - Orig\_Q. Larger values indicate the rewritten question improved benchmark accuracy. The y-axis plots the increase in cosine similarity between the question and context due to rewriting. Larger values indicate better alignment between Rewrite\_Q and AFC compared to Orig\_Q and AFC. That most points are in the upper right quadrant indicates that improvements in embedding alignment between the question and grounding context correlates with improvements benchmark accuracy.}
 	\label{fig:acc_vs_embedding_gpt120b_e5-mistral-7b-instruct}
-	%	\vspace{-1em}   
+	\vspace{-0.1em}   
 \end{figure}
 
 Finally, we test whether this rewriting must be an explicit preprocessing step or if it can be induced via Chain-of-Thought (CoT). 
@@ -819,10 +821,11 @@ Aligning the users query to the document corpus and clarifying the requested inf
 \subsection{Future work}
 This study only used single-shot query rewriting.
 Accuracy improvements are likely possible by extending this to a best of N approach which attempts to disambiguate the users questions in multiple directions based on surfaced evidence, before asking the user which direction actually aligns with their intent. 
-Another likely improvement would be a single multi-turn process which surfaces evidence, rewrites the query, and then performs another search of the corpus with the clarify query.
+Another likely improvement would be a single multi-turn process which surfaces evidence, rewrites the query, and then performs another search of the corpus with the clarified query.
 
-Additional work is required to characterize the inference time costs to this approach. 
+Additional work is required to characterize the additional inference time costs to this approach. 
 How many additional tokens are being spent and RAG database calls made to perform query disambiguation.
+Or how small an LM can be used for this process while still maintaining result fidelity? 
 This methodology provides another test time compute knob that can be turned up or down depending on the requirements of the situation. 
 
 

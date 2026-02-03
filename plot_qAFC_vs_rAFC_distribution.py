@@ -52,22 +52,22 @@ from scipy.stats import gaussian_kde
 #     '#2ca02c',  # green
 # ]
 
-plot_colors = [
-    # '#393b79',  # dark blue
-    '#d62728',  # red
-    '#2ca02c',  # green
-    '#1f77b4',  # blue
-    # '#ffa655',  # orange
-    # '#17becf',  # cyan
-    '#00ffff',  # cyan
-]
-
 # plot_colors = [
-# '#E69F00', # orange
-# '#56B4E9', # Sky Blue
-# '#009E73',  # blueish green
-# '#CC79A7'  # redish purple
+#     # '#393b79',  # dark blue
+#     '#d62728',  # red
+#     '#2ca02c',  # green
+#     '#1f77b4',  # blue
+#     # '#ffa655',  # orange
+#     # '#17becf',  # cyan
+#     '#00ffff',  # cyan
 # ]
+
+plot_colors = [
+'#E69F00', # orange
+'#56B4E9', # Sky Blue
+'#009E73',  # blueish green
+'#CC79A7'  # redish purple
+]
 
 
 impact_of_giveaway = dict()
@@ -140,7 +140,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
-                d_fp = d_fp.replace('mmajursk','mmajurski')
+                # d_fp = d_fp.replace('mmajursk','mmajurski')
                 # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
@@ -293,6 +293,7 @@ for m_idx, model_name in enumerate(all_models):
     from scipy.stats import gaussian_kde
 
     x_grid = np.linspace(0, 1, 200)
+    linestyles = ['-', ':', '--', '-.']  # Different line styles for greyscale distinguishability
     for i, vals in enumerate(data_to_plot):
         if len(vals) > 1:
             kde = gaussian_kde(vals)
@@ -302,6 +303,7 @@ for m_idx, model_name in enumerate(all_models):
                 pdf,
                 label=labels[i],
                 color=colors[i],
+                linestyle=linestyles[i],
                 alpha=0.8,
                 linewidth=3,
             )
@@ -312,7 +314,7 @@ for m_idx, model_name in enumerate(all_models):
         # else, skip if empty
     plt.gca().set_yticks([])
 
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper left', handlelength=3)
     plt.title('Impact of Context on Benchmark Accuracy')
     plt.xlabel('Benchmark Accuracy Distribution \n Over All Datasets (Gaussian KDE)')
     plt.ylabel('')  # Remove units/label from the y-axis
