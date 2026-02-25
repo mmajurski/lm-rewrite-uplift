@@ -64,10 +64,10 @@ plot_markers = [
 ]
 
 
-# for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-subset-500-SU', 'data-post-cutoff-afc','data-subset-500-afc']:
+# for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc','data-subset-500-afc']:  #'data-subset-500-SU'
 for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
     for question_source in ['orig', 'reformat']:
-        for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
+        for generating_model_name in ['gpt120b']: #, 'gpt20b', 'Q235B']:
             
             main_dir = f'./{dataset_fldr}/'
 
@@ -199,7 +199,7 @@ for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
             all_datasets.sort()
             all_models = list(all_models)
             all_models.sort()
-            plt.figure(figsize=(7, 7))
+            plt.figure(figsize=(5, 5))
             figure_has_content = False
 
             # Create a scatterplot for each model
@@ -220,7 +220,7 @@ for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
                         color = plot_colors[m_idx % len(plot_colors)]
                         plt.scatter(ref_acc, giveaway_acc, 
                                 marker=marker, color=color, 
-                                s=80, 
+                                s=50, 
                                 alpha=1.0, 
                                 label=f'{dataset_name} (n={num_questions})')
                     figure_has_content = True
@@ -229,25 +229,26 @@ for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
                 continue
                 
             # Add diagonal line (y=x) representing no change
-            plt.plot([0, 1], [0, 1], 'k--', alpha=0.5)
+            ax = plt.gca()
+            yx_line = ax.plot([0, 1], [0, 1], 'k--', alpha=0.5)[0]
             
             # Add grid and labels
             # plt.grid(True, alpha=0.3)
             if question_source == 'orig':
                 if dataset_fldr.endswith('-afc'):
-                    plt.title(f'Benchmark Accuracy Orig_Q vs Orig_Q with AFC')
-                    plt.ylabel('Benchmark Accuracy for Orig_Q with AFC')
+                    plt.title(f'Benchmark Accuracy: Orig_Q vs Orig_Q + AFC')
+                    plt.ylabel('Benchmark Accuracy: Orig_Q + AFC')
                 else:
-                    plt.title(f'Benchmark Accuracy for Orig_Q vs Orig_Q with Context')
-                    plt.ylabel('Benchmark Accuracy for Orig_Q with Context')
-                plt.xlabel('Benchmark Accuracy for Orig_Q')
+                    plt.title(f'Benchmark Accuracy: Orig_Q vs Orig_Q + Context')
+                    plt.ylabel('Benchmark Accuracy: Orig_Q + Context')
+                plt.xlabel('Benchmark Accuracy: Orig_Q')
             else:
                 if dataset_fldr.endswith('-afc'):
-                    plt.title(f'Benchmark Accuracy for Rewrite_Q vs Rewrite_Q with AFC')
-                    plt.ylabel('Benchmark Accuracy for Rewrite_Q with AFC')
+                    plt.title(f'Benchmark Accuracy: Rewrite_Q vs Rewrite_Q + AFC')
+                    plt.ylabel('Benchmark Accuracy: Rewrite_Q + AFC')
                 else:
-                    plt.title(f'Benchmark Accuracy for Rewrite_Q vs Rewrite_Q with Context')
-                    plt.ylabel('Benchmark Accuracy for Rewrite_Q with Context')
+                    plt.title(f'Benchmark Accuracy: Rewrite_Q vs Rewrite_Q + Context')
+                    plt.ylabel('Benchmark Accuracy: Rewrite_Q + Context')
                 
                 plt.xlabel('Benchmark Accuracy for Rewrite_Q')
             
@@ -259,20 +260,23 @@ for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
             
             # Make the plot square to maintain aspect ratio
             plt.axis('equal')
-            ax = plt.gca()
+            
 
             all_models = [m.split('/')[1] if '/' in m else m for m in all_models]
 
             # Create legend for colors (datasets)
             handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
             labels_color = [f"{m.replace('-FP8','')}" for m in all_models]
+            labels_color = [f"{m.replace('-17B-128E','')}" for m in labels_color]
+            labels_color = [f"{m.replace('-A3B','')}" for m in labels_color]
+            labels_color = [f"{m.replace('-A22B','')}" for m in labels_color]
             # legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="upper left", fontsize='small')  #x-small
             if dataset_fldr.endswith('-afc'):
                 loc = "upper left"
             else:
                 loc = "lower right"
                 
-            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc=loc, fontsize='x-small')  #x-small  
+            # legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc=loc, fontsize='x-small')  #x-small  
 
             # Create legend for markers (models)
             handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
@@ -281,18 +285,36 @@ for dataset_fldr in ['data-post-subset-merged','data-post-subset-merged-afc']:
                 loc = "lower right"
             else:
                 loc = "lower center"
-            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc=loc, fontsize='x-small') # x-small  
+            # legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc=loc, fontsize='x-small') # x-small  
 
             # Add both legends
-            ax.add_artist(legend1)
+            # ax.add_artist(legend1)
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             
             
             # Save the plot
-            os.makedirs(f'./imgs2/{dataset_fldr}', exist_ok=True)
-            plt.savefig(f'./imgs2/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg', dpi=300, bbox_inches='tight')
+            os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
+            plt.savefig(f'./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg', dpi=300, bbox_inches='tight')
+            # plt.close()
+
+            for coll in ax.collections:
+                coll.set_alpha(0.0)
+            yx_line.set_alpha(0.0)
+            ax.grid(False)
+
+
+
+            # plt.figure(figsize=(6, 6))
+            # plt.plot([0, 1], [0, 1], 'k--', alpha=0.0)
+            legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc='upper left', fontsize='small')  #x-small  
+            legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc='upper right', fontsize='small') # x-small  
+            ax.add_artist(legend1)
+            ax.add_artist(legend2)
+            plt.tight_layout()
+            plt.savefig(f'./imgs/LEGEND.png', dpi=300, bbox_inches='tight')
             plt.close()
 
+
             print(f"Scatterplots saved for {len(all_models)} models")
-            print(f"   fp = ./imgs2/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")
+            print(f"   fp = ./imgs/{dataset_fldr}/{generating_model_name}-{question_source}-giveaway.svg")

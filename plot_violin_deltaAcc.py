@@ -122,8 +122,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
-                # d_fp = d_fp.replace('mmajursk','mmajurski')
-                d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
+                d_fp = d_fp.replace('mmajursk','mmajurski')
+                # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
 
@@ -292,6 +292,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_model_data[model]['r_minus_q'] for model in all_models]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -319,6 +321,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_model_data[model]['r_minus_q_afc_giveaway'] for model in all_models]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q_afc_giveaway avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -348,6 +352,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_model_data[model]['r_minus_q_giveaway'] for model in all_models]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q_giveaway avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -380,6 +386,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_model_data[model]['rafc_giveaway_minus_qafc_giveaway'] for model in all_models]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/rafc_giveaway_minus_qafc_giveaway avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -416,6 +424,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_model_data[model]['rafc_minus_qafc_giveaway'] for model in all_models]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/rafc_minus_qafc_giveaway avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -488,6 +498,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_dataset_data[dataset_name]['r_minus_q'] for dataset_name in all_datasets]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q_dataset avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -516,6 +528,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_dataset_data[dataset_name]['r_minus_q_afc_giveaway'] for dataset_name in all_datasets]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q_afc_giveaway_dataset avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -545,6 +559,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_dataset_data[dataset_name]['r_minus_q_giveaway'] for dataset_name in all_datasets]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/r_minus_q_giveaway_dataset avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -574,6 +590,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_dataset_data[dataset_name]['rafc_giveaway_minus_qafc_giveaway'] for dataset_name in all_datasets]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/rafc_giveaway_minus_qafc_giveaway_dataset avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(
@@ -603,6 +621,8 @@ for generating_model_name in ['gpt120b', 'gpt20b', 'Q235B']:
 
     # Prepare data: each violin uses per_model_data[model_name]['r_minus_q']
     violin_data = [per_dataset_data[dataset_name]['rafc_minus_qafc_giveaway'] for dataset_name in all_datasets]
+    avg_uplift = np.mean(np.concatenate(violin_data))
+    print(f"{generating_model_name}/rafc_minus_qafc_giveaway_dataset avg: {avg_uplift}")
 
     # Make the violin plot
     parts = ax.violinplot(

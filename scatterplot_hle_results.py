@@ -239,7 +239,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
             all_datasets.sort()
             all_models = list(all_models)
             all_models.sort()
-            plt.figure(figsize=(5, 5))
+            plt.figure(figsize=(4.5, 4.5))
             figure_has_content = False
             all_y_values = []
             all_x_values = []
@@ -290,17 +290,26 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                 all_models = [m.split('/')[1] if '/' in m else m for m in all_models]
 
                 # Create legend for (marker, color) combinations to clearly delineate (model, dataset) pairs
+                # Only show a subset of models in the legend; see appendix for full legend
+                legend_models_subset = {'gpt-5', 'gpt-5-mini', 'gpt-oss-120b', 'Llama-4-Maverick-Instruct', 'gemma-3-27b-it', 'Qwen3-235B-Instruct-2507'}
                 handles = []
                 labels = []
                 for m_idx, model in enumerate(all_models):
-                    for d_idx, dataset in enumerate(all_datasets):
-                        marker = plot_markers[m_idx % len(plot_markers)]
-                        color = plot_colors[m_idx % len(plot_colors)]
-                        handles.append(
-                            plt.Line2D([0], [0], marker=marker, color=color, linestyle='None', markersize=8, label=model)
-                        )
-                        labels.append(f"{model}")
-                legend1 = ax.legend(handles, labels, title="Evaluation Models", loc="lower right", fontsize='x-small', ncol=1)
+                    marker = plot_markers[m_idx % len(plot_markers)]
+                    color = plot_colors[m_idx % len(plot_colors)]
+                    model_name = model
+                    model_name = f"{model_name.replace('-FP8','')}"
+                    model_name = f"{model_name.replace('-17B-128E','')}"
+                    model_name = f"{model_name.replace('-A3B','')}"
+                    model_name = f"{model_name.replace('-A22B','')}"
+                    if model_name not in legend_models_subset:
+                        continue
+
+                    handles.append(
+                        plt.Line2D([0], [0], marker=marker, color=color, linestyle='None', markersize=8, label=model_name)
+                    )
+                    labels.append(f"{model_name}")
+                legend1 = ax.legend(handles, labels, title="Evaluation Models", loc="lower right", fontsize='small', ncol=1)
 
                 # Add both legends
                 ax.add_artist(legend1)
@@ -309,7 +318,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                 mv = np.max([np.max(all_y_values), np.max(all_x_values)]) + 0.05
                 plt.xlim(0, mv) #0.55)
                 plt.ylim(0, mv) #0.55)
-                
+
                 # Save the plot
                 os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
                 cur_ofp = f'./imgs/{dataset_fldr}/{generating_model_name}{context_str}_hle.svg'
@@ -333,7 +342,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
             all_datasets.sort()
             all_models = list(all_models)
             all_models.sort()
-            plt.figure(figsize=(5, 5))
+            plt.figure(figsize=(4.5, 4.5))
             figure_has_content = False
             all_y_values = []
             all_x_values = []
@@ -386,17 +395,26 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                 all_models = [m.split('/')[1] if '/' in m else m for m in all_models]
 
                 # Create legend for (marker, color) combinations to clearly delineate (model, dataset) pairs
+                # Only show a subset of models in the legend; see appendix for full legend
+                legend_models_subset = {'gpt-5', 'gpt-5-mini', 'gpt-oss-120b', 'Llama-4-Maverick-Instruct', 'gemma-3-27b-it', 'Qwen3-235B-Instruct-2507'}
                 handles = []
                 labels = []
                 for m_idx, model in enumerate(all_models):
-                    for d_idx, dataset in enumerate(all_datasets):
-                        marker = plot_markers[m_idx % len(plot_markers)]
-                        color = plot_colors[m_idx % len(plot_colors)]
-                        handles.append(
-                            plt.Line2D([0], [0], marker=marker, color=color, linestyle='None', markersize=8, label=model)
-                        )
-                        labels.append(f"{model}")
-                legend1 = ax.legend(handles, labels, title="Evaluation Models", loc="lower right", fontsize='x-small', ncol=1)
+                    
+                    marker = plot_markers[m_idx % len(plot_markers)]
+                    color = plot_colors[m_idx % len(plot_colors)]
+                    model_name = model
+                    model_name = f"{model_name.replace('-FP8','')}"
+                    model_name = f"{model_name.replace('-17B-128E','')}"
+                    model_name = f"{model_name.replace('-A3B','')}"
+                    model_name = f"{model_name.replace('-A22B','')}"
+                    if model_name not in legend_models_subset:
+                        continue
+                    handles.append(
+                        plt.Line2D([0], [0], marker=marker, color=color, linestyle='None', markersize=8, label=model_name)
+                    )
+                    labels.append(f"{model_name}")
+                legend1 = ax.legend(handles, labels, title="Evaluation Models", loc="lower right", fontsize='small', ncol=1)
 
                 # Add both legends
                 ax.add_artist(legend1)
@@ -405,7 +423,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                 mv = np.max([np.max(all_y_values), np.max(all_x_values)]) + 0.05
                 plt.xlim(0, mv) #0.55)
                 plt.ylim(0, mv) #0.55)
-                
+
                 # Save the plot
                 os.makedirs(f'./imgs/{dataset_fldr}', exist_ok=True)
                 cur_ofp = f'./imgs/{dataset_fldr}/{generating_model_name}{context_str}_hle_giveaway.svg'

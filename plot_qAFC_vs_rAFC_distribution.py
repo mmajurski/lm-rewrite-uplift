@@ -140,7 +140,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
-                # d_fp = d_fp.replace('mmajursk','mmajurski')
+                d_fp = d_fp.replace('mmajursk','mmajurski')
                 # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)

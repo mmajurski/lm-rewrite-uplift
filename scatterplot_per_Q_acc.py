@@ -244,7 +244,7 @@ for generating_model_name in ['gpt120b']: #, 'gpt20b', 'Q235B']:
         all_datasets.sort()
         all_models = list(all_models)
         all_models.sort()
-        plt.figure(figsize=(7, 7))
+        plt.figure(figsize=(5, 5))
         figure_has_content = False
 
         # Create a scatterplot for each model
@@ -265,7 +265,7 @@ for generating_model_name in ['gpt120b']: #, 'gpt20b', 'Q235B']:
                     color = plot_colors[m_idx % len(plot_colors)]
                     plt.scatter(ref_acc, reformat_acc, 
                             marker=marker, color=color, 
-                            s=80, 
+                            s=50, 
                             alpha=1.0, 
                             label=f'{dataset_name} (n={num_questions})')
                     figure_has_content = True
@@ -281,11 +281,11 @@ for generating_model_name in ['gpt120b']: #, 'gpt20b', 'Q235B']:
         if context_type == 'afc':
             plt.xlabel('Benchmark Accuracy for Original Questions')
             plt.ylabel('Benchmark Accuracy for Questions Rewritten Using AFC')
-            plt.title('Benchmark Accuracy Comparison: Original Questions vs Rewritten Questions')
+            plt.title('Benchmark Accuracy: Orig_Q vs Rewrite_Q')
         else:
             plt.xlabel('Benchmark Accuracy for Original Questions')
             plt.ylabel('Benchmark Accuracy for Questions Rewritten Using Context')
-            plt.title('Benchmark Accuracy Comparison: Original Questions vs Rewritten Questions')
+            plt.title('Benchmark Accuracy: Orig_Q vs Rewrite_Q')
 
         # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         # plt.legend()
@@ -302,21 +302,21 @@ for generating_model_name in ['gpt120b']: #, 'gpt20b', 'Q235B']:
         # Create legend for colors (datasets)
         handles_color = [plt.Line2D([0], [0], color=plot_colors[i], lw=5, alpha=1.0) for i, _ in enumerate(all_models)]
         labels_color = [f"{m.replace('-FP8','')}" for m in all_models]
-        legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="lower right", fontsize='x-small')  #x-small
+        # legend1 = ax.legend(handles_color, labels_color, title="Evaluation Models", loc="lower right", fontsize='x-small')  #x-small
 
         # Create legend for markers (models)
         handles_marker = [plt.Line2D([0], [0], marker=plot_markers[i], color='black', linestyle='None', markersize=6, alpha=1.0) for i, _ in enumerate(all_datasets)]
         labels_marker = [f"{d.replace('Short','')}" for d in all_datasets]
-        legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower center", fontsize='x-small') # x-small  upper left
+        # legend2 = ax.legend(handles_marker, labels_marker, title="Datasets", loc="lower center", fontsize='x-small') # x-small  upper left
 
         # Add both legends
-        ax.add_artist(legend1)
+        # ax.add_artist(legend1)
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
 
         # Save the plot
-        os.makedirs(f'./imgs2/{context_type}', exist_ok=True)
-        cur_ofp = f'./imgs2/{context_type}/{generating_model_name}{context_str}.svg'
+        os.makedirs(f'./imgs/{context_type}', exist_ok=True)
+        cur_ofp = f'./imgs/{context_type}/{generating_model_name}{context_str}.svg'
         print(cur_ofp)
         plt.savefig(cur_ofp, dpi=300, bbox_inches='tight')
         plt.close()
