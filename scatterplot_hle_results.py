@@ -140,7 +140,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                     dataset_name = data['eval']['task_registry_name']
 
                     d_fp = data['eval']['task_args']['dataset_fldr']
-                    d_fp = d_fp.replace('mmajursk','mmajurski')
+                    # d_fp = d_fp.replace('mmajursk','mmajurski')
                     with open(d_fp, 'r') as f:
                         source_dataset = json.load(f)
 
@@ -276,7 +276,7 @@ for dataset_fldr in ['data-post-cutoff','data-post-cutoff-afc']:
                 if context_type == 'afc':
                     plt.xlabel('Benchmark Accuracy for Original Questions (no Context)')
                     plt.ylabel('Benchmark Accuracy for Rewritten Questions (no Context)')
-                    plt.title(f'HLE Benchmark Subset Rewritten by {model_name}\nGrounded with Answer-Free Context')
+                    plt.title(f'HLE Benchmark Subset Rewritten by {model_name}\nGrounded with AnswerFree Context')
                 else:
                     plt.xlabel('Benchmark Accuracy for Original Questions (no Context)')
                     plt.ylabel('Benchmark Accuracy for Rewritten Questions (no Context)')

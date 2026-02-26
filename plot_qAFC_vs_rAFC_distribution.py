@@ -140,7 +140,7 @@ for dataset_fldr in ['data-post-cutoff','data-subset-500', 'data-post-cutoff-afc
                 dataset_name = data['eval']['task_registry_name']
 
                 d_fp = data['eval']['task_args']['dataset_fldr']
-                d_fp = d_fp.replace('mmajursk','mmajurski')
+                # d_fp = d_fp.replace('mmajursk','mmajurski')
                 # d_fp = d_fp.replace('/home/mmajursk/github/lm-rewrite-uplift','/Users/mmajursk/github/lm-rewrite-uplift')
                 with open(d_fp, 'r') as f:
                     source_dataset = json.load(f)
@@ -281,7 +281,7 @@ for m_idx, model_name in enumerate(all_models):
 
     # After looping over datasets, plot all three distributions as side-by-side histograms
     data_to_plot = [model_Q_accs, model_QC_accs, model_QAFC_accs, model_R_accs_afc]
-    labels = ["Question", "Question + Context", "Question + Answer-Free Context", "Rewritten Question"]
+    labels = ["Question", "Question + Context", "Question + AnswerFree Context", "Rewritten Question"]
     colors = [plot_colors[0], plot_colors[1], plot_colors[2], plot_colors[3]]
 
     bins = np.linspace(0, 1, 16)
