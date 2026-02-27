@@ -1,0 +1,28 @@
+# Core LLM interaction
+openai>=1.0
+httpx>=0.27
+python-dotenv>=1.0
+
+# Inspect-ai evaluation framework
+inspect-ai>=0.3
+
+# Data loading and processing
+datasets>=2.0
+pandas>=2.0
+numpy>=1.26
+
+# Similarity and scoring
+scikit-learn>=1.4
+python-Levenshtein>=0.23
+sentence-transformers>=3.0
+scipy>=1.12
+
+# Visualization
+matplotlib>=3.8
+
+# JSON serialization
+jsonpickle>=3.0
+
+# (Optional) GPU inference via transformers
+# transformers>=4.40
+# torch>=2.2

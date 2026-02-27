@@ -1,29 +1,58 @@
-ARC-V1-Feb2018-2
-.idea
-__pycache__
+## Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+*.egg-info/
 
+## IDE
+.idea/
+.vscode/
+
+## Environment / secrets
+.env
+
+## Inspect-ai evaluation outputs
+*.eval
 /logs/
-*.aux
-*.blg
-*.log
-*.synctex.gz
-*.pdf
-plots/
-results/
-old/
+
+## Data directories (too large for git, ~134GB total)
+source_data/
 data-full/
 data-subset-100/
 data-subset-500/
+data-subset-500-SU/
+data-subset-500-SU2/
+data-subset-500-afc/
 data-post-cutoff/
 data-post-cutoff-afc/
-data-subset-500-afc
-source_data/
+data-post-subset-merged/
+data-post-subset-merged-afc/
+
+## LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.pdf
+
+## Misc outputs
+plots/
+results/
+old/
+imgs/
+
+## Scratch / legacy
+ARC-V1-Feb2018-2
 venv-croissant/
 croissant/
 
+## JSON data files (datasets and logs are excluded; config examples are tracked)
+# Note: models_config.json contains server URLs — do not commit
+models_config.json
+# The example files (*.example) are intentionally tracked
 
-*.json
-*.eval
-*.env
-*.bbl
-*.out

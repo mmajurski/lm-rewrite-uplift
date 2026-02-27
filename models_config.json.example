@@ -1,0 +1,24 @@
+{
+  "_comment": "Copy this file to models_config.json and configure your vLLM server endpoints.",
+  "_comment2": "Each key is a display name; model_id is passed to vLLM, base_url is your server URL, api_key_env names the env var holding the API key.",
+  "gpt-oss-120b": {
+    "model_id": "v_llm/gpt-oss-120b",
+    "base_url": "https://your-vllm-server:8443/v1",
+    "api_key_env": "VLLM_API_KEY"
+  },
+  "google/gemma-3-27b-it": {
+    "model_id": "v_llm/google/gemma-3-27b-it",
+    "base_url": "https://your-vllm-server:8444/v1",
+    "api_key_env": "VLLM_API_KEY"
+  },
+  "meta-llama/Llama-3.1-8B-Instruct": {
+    "model_id": "v_llm/meta-llama/Llama-3.1-8B-Instruct",
+    "base_url": "https://your-vllm-server:8445/v1",
+    "api_key_env": "VLLM_API_KEY"
+  },
+  "openai/gpt-4o": {
+    "model_id": "openai/gpt-4o",
+    "base_url": "https://api.openai.com/v1",
+    "api_key_env": "OPENAI_API_KEY"
+  }
+}
