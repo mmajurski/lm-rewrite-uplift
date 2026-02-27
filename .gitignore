@@ -13,6 +13,7 @@ venv/
 
 ## Environment / secrets
 .env
+.claude
 
 ## Inspect-ai evaluation outputs
 *.eval
